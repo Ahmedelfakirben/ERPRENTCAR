@@ -1,0 +1,38 @@
+/* =====================================================
+   FINANCE PAGE
+   ===================================================== */
+.finance-page {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 100%;
+}
+
+.finance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.finance-header h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-1);
+  margin-bottom: 2px;
+}
+
+/* KPI grid — same pattern as dashboard */
+.finance-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1200px) { .finance-kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .finance-kpis { grid-template-columns: 1fr; } }
+
+/* text color helpers */
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+.text-error   { color: var(--error); }

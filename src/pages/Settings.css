@@ -1,0 +1,87 @@
+/* =====================================================
+   SETTINGS MODULE — Clean Top Navigation Layout
+   ===================================================== */
+.settings-page {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Full centering for Settings */
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* ---- Settings Content ---- */
+.settings-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.settings-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1.25rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+}
+
+.card-header h3 {
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+/* ---- User List Table ---- */
+.user-table-card {
+  width: 100%;
+  max-width: 1200px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.user-row:hover {
+  background: var(--surface-2);
+}
+
+.role-badge {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: var(--r-full);
+  text-transform: uppercase;
+}
+
+.role-admin { background: rgba(201, 168, 76, 0.12); color: #8B6914; }
+.role-employee { background: rgba(71, 85, 105, 0.1); color: var(--text-2); }
+
+/* ---- Responsive ---- */
+@media (max-width: 1200px) {
+  .settings-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-page {
+    padding: 1rem;
+  }
+}

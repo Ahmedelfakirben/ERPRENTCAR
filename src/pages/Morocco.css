@@ -1,0 +1,112 @@
+/* =====================================================
+   MOROCCO MODULE — Premium Grid Layout
+   ===================================================== */
+.morocco-page {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.morocco-header {
+  margin-bottom: 1.5rem;
+}
+
+.morocco-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-1);
+}
+
+/* ---- Content Redistribution ---- */
+.morocco-content-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+}
+
+.morocco-sidebar-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.morocco-main-col {
+  min-width: 0; /* Fix flex/grid overflow */
+}
+
+/* ---- Components Refinement ---- */
+.icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-gold-light {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* ---- Table Styles ---- */
+.police-sheet-header {
+  background: var(--surface-2);
+}
+
+.search-group {
+  position: relative;
+  width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.search-group .input-field {
+  padding-left: 3rem;
+  background: var(--surface);
+  border-radius: var(--r-full);
+}
+
+/* ---- Mock GPS Styles ---- */
+.gps-pulse {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  background: var(--surface-2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+.pulse-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (max-width: 1200px) {
+  .morocco-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .morocco-sidebar-col {
+    order: 2;
+  }
+}

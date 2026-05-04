@@ -1,0 +1,108 @@
+.invoice-create-page {
+  padding: var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.invoice-form-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--spacing-6);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .invoice-form-grid { grid-template-columns: 1fr; }
+}
+
+.invoice-form h2 {
+  font-size: 1.3rem;
+}
+
+/* Invoice Lines */
+.invoice-lines {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.invoice-line-header {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr 40px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--color-bg-surface-hover);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+.invoice-line-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr 40px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.line-total {
+  text-align: end;
+}
+
+/* Preview */
+.invoice-preview {
+  position: sticky;
+  top: var(--spacing-8);
+}
+
+.invoice-preview:hover {
+  transform: none;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-4);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.text-end {
+  text-align: end;
+}
+
+[dir="rtl"] .text-end {
+  text-align: start;
+}
+
+.preview-client {
+  padding: var(--spacing-3);
+  background: var(--color-bg-surface-hover);
+  border-radius: var(--radius-md);
+}
+
+/* Totals */
+.preview-totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-4);
+}
+
+.preview-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.total-final {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+  padding-top: var(--spacing-2);
+  border-top: 2px solid var(--color-primary);
+}
