@@ -21,7 +21,7 @@
   flex-shrink: 0;
   border-right: 1px solid rgba(255,255,255,0.07);
   transition: transform var(--t-normal), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .sidebar.collapsed {
@@ -484,7 +484,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 900;
+  z-index: 1900;
 }
 
 .mobile-header-content {
@@ -519,7 +519,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 950;
+  z-index: 1950;
   animation: fadeIn var(--t-normal) ease;
 }
 
@@ -531,7 +531,7 @@
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: column;
+    flex-direction: row; /* Horizontal on mobile too */
   }
 
   .sidebar {
@@ -539,37 +539,41 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 280px;
-    transform: translateX(-100%);
-    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+    width: 70px; /* Slim by default on mobile */
+    transform: translateX(0); /* Always visible */
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    z-index: 1000;
   }
 
-  .sidebar.show {
-    transform: translateX(0);
+  /* When expanded on mobile (isMobileMenuOpen or !isCollapsed) */
+  .sidebar.show, .app-container:not(.sidebar-collapsed) .sidebar {
+    width: 280px;
   }
 
   [dir="rtl"] .sidebar {
     left: auto;
     right: 0;
-    transform: translateX(100%);
-    box-shadow: -20px 0 50px rgba(0,0,0,0.5);
-  }
-
-  [dir="rtl"] .sidebar.show {
-    transform: translateX(0);
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
   }
 
   .mobile-header {
-    display: block;
+    display: none; /* Persistent sidebar means we don't need mobile top header */
   }
 
   .main-content {
-    margin-top: 64px;
-    height: calc(100vh - 64px);
+    margin-top: 0;
+    margin-left: 70px; /* Space for persistent slim sidebar */
+    width: calc(100vw - 70px);
+    height: 100vh;
+  }
+
+  [dir="rtl"] .main-content {
+    margin-left: 0;
+    margin-right: 70px;
   }
 
   .mobile-close-btn {
-    display: flex;
+    display: none;
   }
 }
 

@@ -159,7 +159,7 @@ const Contracts = () => {
 
         {/* Filters */}
         <div className="card flex items-center justify-between gap-4 flex-wrap no-print" style={{ padding: '1rem 1.5rem' }}>
-          <div className="input-group" style={{ margin: 0, flex: 1, minWidth: '250px' }}>
+          <div className="input-group" style={{ margin: 0, flex: '1 1 300px' }}>
             <div style={{ position: 'relative' }}>
               <Search size={18} className="text-secondary" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
               <input 
@@ -171,15 +171,15 @@ const Contracts = () => {
               />
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-secondary" />
-              <span className="text-sm font-medium">{isAr ? 'من:' : 'De:'}</span>
-              <input type="date" className="input-field py-2" value={filterStartDate} onChange={e => handleFilterStart(e.target.value)} />
+          <div className="flex items-center gap-0 flex-wrap card-glass" style={{ padding: '2px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', flex: '1 1 300px', maxWidth: 'fit-content' }}>
+            <div className="flex items-center gap-2 px-3 py-1 border-r border-border" style={{ minWidth: '140px' }}>
+              <Calendar size={14} className="text-gold" />
+              <span className="text-xs font-bold text-secondary uppercase tracking-wider">{isAr ? 'من:' : 'De:'}</span>
+              <input type="date" className="input-field border-none bg-transparent p-0" style={{ boxShadow: 'none', minHeight: 'auto', fontSize: '0.8rem' }} value={filterStartDate} onChange={e => handleFilterStart(e.target.value)} />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{isAr ? 'إلى:' : 'À:'}</span>
-              <input type="date" className="input-field py-2" value={filterEndDate} onChange={e => handleFilterEnd(e.target.value)} />
+            <div className="flex items-center gap-2 px-3 py-1" style={{ minWidth: '140px' }}>
+              <span className="text-xs font-bold text-secondary uppercase tracking-wider">{isAr ? 'إلى:' : 'À:'}</span>
+              <input type="date" className="input-field border-none bg-transparent p-0" style={{ boxShadow: 'none', minHeight: 'auto', fontSize: '0.8rem' }} value={filterEndDate} onChange={e => handleFilterEnd(e.target.value)} />
             </div>
           </div>
         </div>

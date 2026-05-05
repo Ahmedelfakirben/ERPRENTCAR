@@ -271,15 +271,18 @@ const ContractCreate = () => {
                 key={c.id}
                 className={`select-card card ${selectedClient === c.id ? 'select-card-active' : ''}`}
                 onClick={() => setSelectedClient(c.id)}
+                style={{ padding: '1.25rem', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1.25rem' }}
               >
                 <div className="select-card-avatar">{(isAr ? (c.full_name_ar || c.full_name) : c.full_name).charAt(0)}</div>
-                <div>
-                  <h4>{isAr ? (c.full_name_ar || c.full_name) : c.full_name}</h4>
-                  <p className="text-sm text-secondary">CIN: {c.cin}</p>
-                  <p className="text-sm text-secondary">{c.phone}</p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="m-0 font-bold text-lg" style={{ color: 'var(--text-1)' }}>
+                    {isAr ? (c.full_name_ar || c.full_name) : c.full_name}
+                  </h4>
+                  <p className="text-sm text-secondary m-0 mt-1">CIN: {c.cin}</p>
+                  <p className="text-sm text-secondary m-0">{c.phone}</p>
                 </div>
                 {selectedClient === c.id && (
-                  <div className="select-check"><Check size={16} /></div>
+                  <div className="select-check" style={{ position: 'static', flexShrink: 0 }}><Check size={16} /></div>
                 )}
               </div>
             ))}

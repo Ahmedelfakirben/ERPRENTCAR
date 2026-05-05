@@ -14,7 +14,8 @@
   --sidebar-text:   #9CA3AF;
   --sidebar-text-active: #F9FAFB;
   --sidebar-border: rgba(255,255,255,0.06);
-  --sidebar-width:  220px;
+  --sidebar-width:  240px;
+  --header-height: 64px;
 
   /* Content area (light) */
   --bg:             #F1F5F9;  /* very light slate */
@@ -226,7 +227,10 @@ ul { list-style: none; }
    TABS — reusable across pages
    ========================================== */
 .tab-bar {
-  display: inline-flex;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  align-self: center;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-full);
@@ -234,8 +238,21 @@ ul { list-style: none; }
   gap: 4px;
   box-shadow: var(--shadow-xs);
   width: fit-content;
-  flex-shrink: 0;
-  align-self: center; /* This centers the bar specifically */
+  min-width: min-content;
+  margin: 0 auto;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .tab-bar {
+    justify-content: center;
+  }
 }
 
 .tab {
@@ -386,6 +403,41 @@ ul { list-style: none; }
   outline: none;
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+
+/* Custom Date Input Styling */
+input[type="date"].input-field {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 42px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.6);
+  transition: filter var(--t-fast);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.4) sepia(1) saturate(5) hue-rotate(10deg);
+}
+
+/* Responsive Date Range Pill */
+@media (max-width: 600px) {
+  .card-glass.flex.items-center.gap-0.flex-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .card-glass.flex.items-center.gap-0.flex-wrap > div {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    padding: 0.75rem !important;
+  }
+  .card-glass.flex.items-center.gap-0.flex-wrap > div:last-child {
+    border-bottom: none;
+  }
 }
 
 .input-label {
@@ -682,11 +734,72 @@ ul { list-style: none; }
 
 /* Ensure pages have enough bottom padding for floating actions */
 .fleet-page, .contracts-page, .clients-page, .finance-page, .morocco-page, .dashboard-page, .settings-page {
-  padding-bottom: 100px !important;
+  padding-bottom: 120px !important;
 }
 
 /* Fix for horizontal scroll on body */
 body {
   overflow-x: hidden;
   width: 100%;
+  position: relative;
+}
+
+/* ==========================================
+   MOBILE OPTIMIZATIONS (GLOBAL)
+   ========================================== */
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .mobile-hide, .hide-mobile { display: none !important; }
+  .mobile-stack { flex-direction: column !important; gap: 1rem !important; }
+  .mobile-full { width: 100% !important; }
+
+  /* Table container auto-scroll */
+  .table-container, .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+
+  .data-table { min-width: 600px; } /* Ensure table doesn't squash too much */
+
+  /* Tab Bar Mobile */
+  .tab-bar {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 6px;
+    border-radius: var(--r-lg);
+  }
+  .tab { padding: 0.5rem 0.85rem; font-size: 0.75rem; }
+
+  /* Grid Stack */
+  .grid-stack { grid-template-columns: 1fr !important; }
+
+  /* Modal adjust */
+  .modal-content {
+    width: 95% !important;
+    padding: var(--s-5) !important;
+    margin: 0 !important;
+    max-height: 90vh;
+  }
+}
+
+/* Form Helper */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-4);
 }

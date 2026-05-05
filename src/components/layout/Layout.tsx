@@ -65,9 +65,9 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* Overlay for mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
+      {/* Overlay only for expanded mobile menu */}
+      {isMobileMenuOpen && !isCollapsed && (
+        <div className="mobile-overlay" onClick={() => { setIsMobileMenuOpen(false); setIsCollapsed(true); }} />
       )}
 
       <aside className={`sidebar ${isMobileMenuOpen ? 'show' : ''} ${isCollapsed ? 'collapsed' : ''}`}>

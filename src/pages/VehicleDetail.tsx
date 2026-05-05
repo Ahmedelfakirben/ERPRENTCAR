@@ -9,6 +9,7 @@ import {
 import { supabase } from '../lib/supabase';
 import ImageUpload from '../components/common/ImageUpload';
 import DamageMap from '../components/DamageMap';
+import PageLoader from '../components/layout/PageLoader';
 import './VehicleDetail.css';
 
 const VehicleDetail = () => {
@@ -269,7 +270,7 @@ const VehicleDetail = () => {
     ar: { oil_change: 'تغيير الزيت', tires: 'الإطارات', brakes: 'الفرامل', general: 'مراجعة', other: 'أخرى' },
   };
 
-  if (loading) return <div className="flex justify-center p-24"><Loader2 className="animate-spin text-primary" size={64} /></div>;
+  if (loading) return <PageLoader />;
   if (!vehicle) return <div className="p-12 text-center text-error">Vehicle not found</div>;
 
   const v = vehicle;
@@ -278,94 +279,99 @@ const VehicleDetail = () => {
   return (
     <>
       <div className="vehicle-detail-page animate-fade-in">
-        {/* Back Button + Header */}
-        <div className="detail-top-bar">
-          <button className="btn btn-ghost" onClick={() => navigate('/fleet')}>
-            <ArrowLeft size={18} /> {isAr ? 'العودة للأسطول' : 'Retour à la Flotte'}
-          </button>
-          <div className="flex gap-2">
-            <button className="btn btn-outline" onClick={() => setShowEditModal(true)}><Edit size={16} /> {isAr ? 'تعديل' : 'Modifier'}</button>
-            <button className="btn btn-outline text-error" onClick={handleDeleteVehicle}><Trash2 size={16} /> {isAr ? 'حذف' : 'Supprimer'}</button>
+        <div className="vehicle-detail-header-group">
+          {/* Back Button + Header */}
+          <div className="detail-top-bar">
+            <button className="btn btn-ghost" onClick={() => navigate('/fleet')}>
+              <ArrowLeft size={18} /> {isAr ? 'العودة للأسطول' : 'Retour à la Flotte'}
+            </button>
+            <div className="flex gap-2">
+              <button className="btn btn-outline" onClick={() => setShowEditModal(true)}><Edit size={16} /> {isAr ? 'تعديل' : 'Modifier'}</button>
+              <button className="btn btn-outline text-error" onClick={handleDeleteVehicle}><Trash2 size={16} /> {isAr ? 'حذف' : 'Supprimer'}</button>
+            </div>
           </div>
-        </div>
 
-        {/* Hero Card */}
-        <div className="vehicle-hero card">
-          {/* Photo panel */}
-          <div className="vehicle-hero-image-wrap">
-            {v.image_url ? (
-              <img src={v.image_url} alt={v.brand} className="hero-img" />
-            ) : (
-              <div className="hero-emoji-placeholder">
-                <span>{v.brand === 'Dacia' ? '🚗' : '🚙'}</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {isAr ? 'لا توجد صورة' : 'Aucune photo'}
-                </span>
+          {/* Hero Card */}
+          <div className="vehicle-hero card">
+            {/* Photo panel */}
+            <div className="vehicle-hero-image-wrap">
+              {v.image_url ? (
+                <img src={v.image_url} alt={v.brand} className="hero-img" />
+              ) : (
+                <div className="hero-emoji-placeholder">
+                  <span>{v.brand === 'Dacia' ? '🚗' : '🚙'}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {isAr ? 'لا توجد صورة' : 'Aucune photo'}
+                  </span>
+                </div>
+              )}
+              {/* Upload overlay — only visible on hover */}
+              <div className="hero-upload-overlay">
+                <Camera size={28} />
+                <span>{isAr ? 'تغيير الصورة' : 'Changer la photo'}</span>
+                <ImageUpload
+                  bucket="vehicles"
+                  onUploadComplete={async (url) => {
+                    const { error } = await supabase.from('vehicles').update({ image_url: url }).eq('id', id);
+                    if (!error) setVehicle({ ...vehicle, image_url: url });
+                  }}
+                />
               </div>
-            )}
-            {/* Upload overlay — only visible on hover */}
-            <div className="hero-upload-overlay">
-              <Camera size={28} />
-              <span>{isAr ? 'تغيير الصورة' : 'Changer la photo'}</span>
-              <ImageUpload
-                bucket="vehicles"
-                onUploadComplete={async (url) => {
-                  const { error } = await supabase.from('vehicles').update({ image_url: url }).eq('id', id);
-                  if (!error) setVehicle({ ...vehicle, image_url: url });
-                }}
-              />
+            </div>
+
+            {/* Info section */}
+            <div className="vehicle-hero-left">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <h1 className="m-0" style={{ fontWeight: 800, fontSize: '1.75rem' }}>{v.brand} {v.model}</h1>
+                <span className={`badge ${statusBadge[v.status]}`}>{statusLabels[lang][v.status]}</span>
+              </div>
+              <p className="vehicle-hero-plate m-0 mt-1">{v.plate}</p>
+            </div>
+
+            {/* Stats bar */}
+            <div className="vehicle-hero-stats">
+              <div className="hero-stat"><Calendar size={15} /><span>{v.year}</span></div>
+              <div className="hero-stat"><Fuel size={15} /><span>{v.fuel}</span></div>
+              <div className="hero-stat"><Gauge size={15} /><span>{(v.current_km || 0).toLocaleString()} km</span></div>
+              <div className="hero-stat"><Settings2 size={15} /><span>{v.transmission}</span></div>
+              <div className="hero-stat hero-rate">
+                <span className="text-primary font-bold" style={{ fontSize: '1rem' }}>{v.daily_rate} MAD</span>
+                <small>/{isAr ? 'يوم' : 'jour'}</small>
+              </div>
             </div>
           </div>
 
-          {/* Info section */}
-          <div className="vehicle-hero-left">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <h1 className="m-0" style={{ fontWeight: 800, fontSize: '1.75rem' }}>{v.brand} {v.model}</h1>
-              <span className={`badge ${statusBadge[v.status]}`}>{statusLabels[lang][v.status]}</span>
-            </div>
-            <p className="vehicle-hero-plate m-0 mt-1">{v.plate}</p>
-          </div>
-
-          {/* Stats bar */}
-          <div className="vehicle-hero-stats">
-            <div className="hero-stat"><Calendar size={15} /><span>{v.year}</span></div>
-            <div className="hero-stat"><Fuel size={15} /><span>{v.fuel}</span></div>
-            <div className="hero-stat"><Gauge size={15} /><span>{(v.current_km || 0).toLocaleString()} km</span></div>
-            <div className="hero-stat"><Settings2 size={15} /><span>{v.transmission}</span></div>
-            <div className="hero-stat hero-rate">
-              <span className="text-primary font-bold" style={{ fontSize: '1rem' }}>{v.daily_rate} MAD</span>
-              <small>/{isAr ? 'يوم' : 'jour'}</small>
-            </div>
+          {/* Tabs */}
+          <div className="tab-bar">
+            <button className={`tab ${tab === 'info' ? 'tab-active' : ''}`} onClick={() => setTab('info')}>
+              <CarFront size={16} /> {isAr ? 'معلومات' : 'Infos'}
+            </button>
+            <button className={`tab ${tab === 'maintenance' ? 'tab-active' : ''}`} onClick={() => setTab('maintenance')}>
+              <Wrench size={16} /> {isAr ? 'الصيانة' : 'Maintenance'}
+            </button>
+            <button className={`tab ${tab === 'documents' ? 'tab-active' : ''}`} onClick={() => setTab('documents')}>
+              <FileText size={16} /> {isAr ? 'الوثائق' : 'Documents'}
+            </button>
+            <button className={`tab ${tab === 'photos' ? 'tab-active' : ''}`} onClick={() => setTab('photos')}>
+              <Camera size={16} /> {isAr ? 'صور الأضرار' : 'Photos'}
+            </button>
+            <button className={`tab ${tab === 'history' ? 'tab-active' : ''}`} onClick={() => setTab('history')}>
+              <Clock size={16} /> {isAr ? 'تاريخ الإيجارات' : 'Historique'}
+            </button>
+            <button className={`tab ${tab === 'expenses' ? 'tab-active' : ''}`} onClick={() => setTab('expenses')}>
+              <TrendingUp size={16} /> {isAr ? 'المصاريف' : 'Dépenses'}
+            </button>
+            <button className={`tab ${tab === 'financing' ? 'tab-active' : ''}`} onClick={() => setTab('financing')}>
+              <FileText size={16} /> {isAr ? 'التمويل' : 'Financement'}
+            </button>
+            <button className={`tab ${tab === 'damages' ? 'tab-active' : ''}`} onClick={() => setTab('damages')}>
+              <ShieldAlert size={16} /> {isAr ? 'حالة السيارة' : 'État du vehículo'}
+            </button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="tab-bar">
-          <button className={`tab ${tab === 'info' ? 'tab-active' : ''}`} onClick={() => setTab('info')}>
-            <CarFront size={16} /> {isAr ? 'معلومات' : 'Infos'}
-          </button>
-          <button className={`tab ${tab === 'maintenance' ? 'tab-active' : ''}`} onClick={() => setTab('maintenance')}>
-            <Wrench size={16} /> {isAr ? 'الصيانة' : 'Maintenance'}
-          </button>
-          <button className={`tab ${tab === 'documents' ? 'tab-active' : ''}`} onClick={() => setTab('documents')}>
-            <FileText size={16} /> {isAr ? 'الوثائق' : 'Documents'}
-          </button>
-          <button className={`tab ${tab === 'photos' ? 'tab-active' : ''}`} onClick={() => setTab('photos')}>
-            <Camera size={16} /> {isAr ? 'صور الأضرار' : 'Photos'}
-          </button>
-          <button className={`tab ${tab === 'history' ? 'tab-active' : ''}`} onClick={() => setTab('history')}>
-            <Clock size={16} /> {isAr ? 'تاريخ الإيجارات' : 'Historique'}
-          </button>
-          <button className={`tab ${tab === 'expenses' ? 'tab-active' : ''}`} onClick={() => setTab('expenses')}>
-            <TrendingUp size={16} /> {isAr ? 'المصاريف' : 'Dépenses'}
-          </button>
-          <button className={`tab ${tab === 'financing' ? 'tab-active' : ''}`} onClick={() => setTab('financing')}>
-            <FileText size={16} /> {isAr ? 'التمويل' : 'Financement'}
-          </button>
-          <button className={`tab ${tab === 'damages' ? 'tab-active' : ''}`} onClick={() => setTab('damages')}>
-            <ShieldAlert size={16} /> {isAr ? 'حالة السيارة' : 'État du véhicule'}
-          </button>
-        </div>
+        {/* Tab Content Area */}
+        <div className="vehicle-detail-content-area">
 
         {/* Tab: Info */}
         {tab === 'info' && (
@@ -483,31 +489,33 @@ const VehicleDetail = () => {
               <h3>{isAr ? 'سجل الصيانة' : 'Historique de Maintenance'}</h3>
               <button className="btn btn-primary btn-sm" onClick={() => setShowAddMaintenance(true)}><Plus size={16} /> {isAr ? 'إضافة' : 'Ajouter'}</button>
             </div>
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{isAr ? 'النوع' : 'Type'}</th>
-                    <th>{isAr ? 'الوصف' : 'Description'}</th>
-                    <th>{isAr ? 'التكلفة' : 'Coût'}</th>
-                    <th>{isAr ? 'كم عند الخدمة' : 'KM'}</th>
-                    <th>{isAr ? 'التاريخ' : 'Date'}</th>
-                    <th>{isAr ? 'كم القادمة' : 'Prochain KM'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {maintenance.map(m => (
-                    <tr key={m.id}>
-                      <td><span className="badge badge-warning">{maintenanceLabels[lang][m.maintenance_type]}</span></td>
-                      <td>{m.description}</td>
-                      <td className="font-semibold">{(m.cost || 0).toLocaleString()} MAD</td>
-                      <td className="text-secondary">{(m.km_at_service || 0).toLocaleString()}</td>
-                      <td className="text-secondary">{m.performed_at}</td>
-                      <td className="font-medium">{(m.next_due_km || 0).toLocaleString()} km</td>
+            <div className="card" style={{ padding: 0 }}>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{isAr ? 'النوع' : 'Type'}</th>
+                      <th>{isAr ? 'الوصف' : 'Description'}</th>
+                      <th>{isAr ? 'التكلفة' : 'Coût'}</th>
+                      <th>{isAr ? 'كم عند الخدمة' : 'KM'}</th>
+                      <th>{isAr ? 'التاريخ' : 'Date'}</th>
+                      <th>{isAr ? 'كم القادمة' : 'Prochain KM'}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {maintenance.map(m => (
+                      <tr key={m.id}>
+                        <td><span className="badge badge-warning">{maintenanceLabels[lang][m.maintenance_type]}</span></td>
+                        <td>{m.description}</td>
+                        <td className="font-semibold">{(m.cost || 0).toLocaleString()} MAD</td>
+                        <td className="text-secondary">{(m.km_at_service || 0).toLocaleString()}</td>
+                        <td className="text-secondary">{m.performed_at}</td>
+                        <td className="font-medium">{(m.next_due_km || 0).toLocaleString()} km</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -588,35 +596,37 @@ const VehicleDetail = () => {
         {tab === 'history' && (
           <div>
             <h3 className="mb-4">{isAr ? 'تاريخ الإيجارات' : 'Historique des Locations'}</h3>
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{isAr ? 'العقد' : 'Contrat'}</th>
-                    <th>{isAr ? 'العميل' : 'Client'}</th>
-                    <th>{isAr ? 'البداية' : 'Début'}</th>
-                    <th>{isAr ? 'النهاية' : 'Fin'}</th>
-                    <th>{isAr ? 'المجموع' : 'Total'}</th>
-                    <th>{isAr ? 'الحالة' : 'Statut'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map(r => (
-                    <tr key={r.id} className="cursor-pointer" onClick={() => navigate(`/contracts/${r.id}`)}>
-                      <td className="font-medium text-primary">{r.contract_number}</td>
-                      <td>{isAr ? (r.clients?.full_name_ar || r.clients?.full_name) : r.clients?.full_name}</td>
-                      <td className="text-secondary">{r.start_date}</td>
-                      <td className="text-secondary">{r.end_date}</td>
-                      <td className="font-semibold">{r.total_ttc.toLocaleString()} MAD</td>
-                      <td>
-                        <span className={`badge ${r.status === 'active' ? 'badge-primary' : 'badge-success'}`}>
-                          {r.status === 'active' ? (isAr ? 'نشط' : 'Actif') : (isAr ? 'مكتمل' : 'Terminé')}
-                        </span>
-                      </td>
+            <div className="card" style={{ padding: 0 }}>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{isAr ? 'العقد' : 'Contrat'}</th>
+                      <th>{isAr ? 'العميل' : 'Client'}</th>
+                      <th>{isAr ? 'البداية' : 'Début'}</th>
+                      <th>{isAr ? 'النهاية' : 'Fin'}</th>
+                      <th>{isAr ? 'المجموع' : 'Total'}</th>
+                      <th>{isAr ? 'الحالة' : 'Statut'}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {history.map(r => (
+                      <tr key={r.id} className="cursor-pointer" onClick={() => navigate(`/contracts/${r.id}`)}>
+                        <td className="font-medium text-primary">{r.contract_number}</td>
+                        <td>{isAr ? (r.clients?.full_name_ar || r.clients?.full_name) : r.clients?.full_name}</td>
+                        <td className="text-secondary">{r.start_date}</td>
+                        <td className="text-secondary">{r.end_date}</td>
+                        <td className="font-semibold">{r.total_ttc.toLocaleString()} MAD</td>
+                        <td>
+                          <span className={`badge ${r.status === 'active' ? 'badge-primary' : 'badge-success'}`}>
+                            {r.status === 'active' ? (isAr ? 'نشط' : 'Activo') : (isAr ? 'مكتمل' : 'Terminado')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -625,30 +635,32 @@ const VehicleDetail = () => {
         {tab === 'expenses' && (
           <div className="spacious-tab-content">
             <h3 className="mb-4">{isAr ? 'سجل المصاريف' : 'Registre des Dépenses'}</h3>
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{isAr ? 'التاريخ' : 'Date'}</th>
-                    <th>{isAr ? 'الفئة' : 'Catégorie'}</th>
-                    <th>{isAr ? 'الوصف' : 'Description'}</th>
-                    <th>{isAr ? 'المبلغ' : 'Montant'}</th>
-                    <th>{isAr ? 'طريقة الدفع' : 'Méthode'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.length === 0 && <tr><td colSpan={5} className="text-center p-8 text-secondary">{isAr ? 'لا توجد مصاريف مسجلة' : 'Aucune dépense enregistrée'}</td></tr>}
-                  {expenses.map(ex => (
-                    <tr key={ex.id}>
-                      <td className="text-secondary">{ex.transaction_date}</td>
-                      <td><span className="badge badge-warning">{ex.category}</span></td>
-                      <td>{ex.description}</td>
-                      <td className="font-semibold text-error">-{ex.amount.toLocaleString()} MAD</td>
-                      <td className="text-secondary">{ex.payment_method}</td>
+            <div className="card" style={{ padding: 0 }}>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{isAr ? 'التاريخ' : 'Date'}</th>
+                      <th>{isAr ? 'الفئة' : 'Catégorie'}</th>
+                      <th>{isAr ? 'الوصف' : 'Description'}</th>
+                      <th>{isAr ? 'المبلغ' : 'Montant'}</th>
+                      <th>{isAr ? 'طريقة الدفع' : 'Méthode'}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {expenses.length === 0 && <tr><td colSpan={5} className="text-center p-8 text-secondary">{isAr ? 'لا توجد مصاريف مسجلة' : 'Aucune dépense enregistrée'}</td></tr>}
+                    {expenses.map(ex => (
+                      <tr key={ex.id}>
+                        <td className="text-secondary">{ex.transaction_date}</td>
+                        <td><span className="badge badge-warning">{ex.category}</span></td>
+                        <td>{ex.description}</td>
+                        <td className="font-semibold text-error">-{ex.amount.toLocaleString()} MAD</td>
+                        <td className="text-secondary">{ex.payment_method}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -760,43 +772,45 @@ const VehicleDetail = () => {
               </div>
             </div>
 
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{isAr ? 'رقم الدفعة' : 'N° Échéance'}</th>
-                    <th>{isAr ? 'التاريخ' : 'Date'}</th>
-                    <th>{isAr ? 'المبلغ' : 'Montant'}</th>
-                    <th>{isAr ? 'الحالة' : 'Statut'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(!vehicle.loan_start_date || !vehicle.loan_duration) && (
+            <div className="card" style={{ padding: 0 }}>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
                     <tr>
-                      <td colSpan={4} className="text-center p-12 text-secondary">
-                        {isAr ? 'يرجى إكمال الإعدادات أعلاه لعرض الجدول' : 'Veuillez configurer les parámetros du crédit pour voir le tableau'}
-                      </td>
+                      <th>{isAr ? 'رقم الدفعة' : 'N° Échéance'}</th>
+                      <th>{isAr ? 'التاريخ' : 'Date'}</th>
+                      <th>{isAr ? 'المبلغ' : 'Montant'}</th>
+                      <th>{isAr ? 'الحالة' : 'Statut'}</th>
                     </tr>
-                  )}
-                  {vehicle.loan_start_date && vehicle.loan_duration && Array.from({ length: vehicle.loan_duration }).map((_, i) => {
-                    const dueDate = new Date(vehicle.loan_start_date);
-                    dueDate.setMonth(dueDate.getMonth() + i);
-                    const isPaid = dueDate < new Date();
-                    return (
-                      <tr key={i}>
-                        <td className="font-medium">{i + 1}</td>
-                        <td className="text-secondary">{dueDate.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { month: 'long', year: 'numeric' })}</td>
-                        <td className="font-semibold">{(vehicle.loan_monthly_payment || 0).toLocaleString()} MAD</td>
-                        <td>
-                          <span className={`badge ${isPaid ? 'badge-success' : 'badge-warning'}`}>
-                            {isPaid ? (isAr ? 'مدفوع' : 'Payé') : (isAr ? 'قادم' : 'À venir')}
-                          </span>
+                  </thead>
+                  <tbody>
+                    {(!vehicle.loan_start_date || !vehicle.loan_duration) && (
+                      <tr>
+                        <td colSpan={4} className="text-center p-12 text-secondary">
+                          {isAr ? 'يرجى إكمال الإعدادات أعلاه لعرض الجدول' : 'Veuillez configurer les paramètres du crédit pour voir le tableau'}
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    )}
+                    {vehicle.loan_start_date && vehicle.loan_duration && Array.from({ length: vehicle.loan_duration }).map((_, i) => {
+                      const dueDate = new Date(vehicle.loan_start_date);
+                      dueDate.setMonth(dueDate.getMonth() + i);
+                      const isPaid = dueDate < new Date();
+                      return (
+                        <tr key={i}>
+                          <td className="font-medium">{i + 1}</td>
+                          <td className="text-secondary">{dueDate.toLocaleDateString(isAr ? 'ar-MA' : 'fr-FR', { month: 'long', year: 'numeric' })}</td>
+                          <td className="font-semibold">{(vehicle.loan_monthly_payment || 0).toLocaleString()} MAD</td>
+                          <td>
+                            <span className={`badge ${isPaid ? 'badge-success' : 'badge-warning'}`}>
+                              {isPaid ? (isAr ? 'مدفوع' : 'Payé') : (isAr ? 'قادم' : 'À venir')}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -900,27 +914,28 @@ const VehicleDetail = () => {
           </div>
         )}
       </div>
+    </div>
 
-      {/* Modal: Add Maintenance */}
-      {showAddMaintenance && (
-        <div className="modal-overlay" onClick={() => setShowAddMaintenance(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 className="mb-6">{isAr ? 'إضافة سجل صيانة' : 'Nouvelle Maintenance'}</h2>
-            <div className="form-grid">
-              <div className="input-group">
-                <label className="input-label">{isAr ? 'النوع' : 'Type'}</label>
-                <select
-                  className="input-field"
-                  value={maintData.maintenance_type}
-                  onChange={e => setMaintData({ ...maintData, maintenance_type: e.target.value })}
-                >
-                  <option value="oil_change">{isAr ? 'تغيير الزيت' : 'Vidange'}</option>
-                  <option value="tires">{isAr ? 'الإطارات' : 'Pneus'}</option>
-                  <option value="brakes">{isAr ? 'الفرامل' : 'Freins'}</option>
-                  <option value="general">{isAr ? 'مراجعة عامة' : 'Révision générale'}</option>
-                  <option value="other">{isAr ? 'أخرى' : 'Autre'}</option>
-                </select>
-              </div>
+    {/* Modal: Add Maintenance */}
+    {showAddMaintenance && (
+      <div className="modal-overlay" onClick={() => setShowAddMaintenance(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <h2 className="mb-6">{isAr ? 'إضافة سجل صيانة' : 'Nouvelle Maintenance'}</h2>
+          <div className="form-grid">
+            <div className="input-group">
+              <label className="input-label">{isAr ? 'النوع' : 'Type'}</label>
+              <select
+                className="input-field"
+                value={maintData.maintenance_type}
+                onChange={e => setMaintData({ ...maintData, maintenance_type: e.target.value })}
+              >
+                <option value="oil_change">{isAr ? 'تغيير الزيت' : 'Vidange'}</option>
+                <option value="tires">{isAr ? 'الإطارات' : 'Pneus'}</option>
+                <option value="brakes">{isAr ? 'الفرامل' : 'Freins'}</option>
+                <option value="general">{isAr ? 'مراجعة عامة' : 'Révision générale'}</option>
+                <option value="other">{isAr ? 'أخرى' : 'Autre'}</option>
+              </select>
+            </div>
               <div className="input-group">
                 <label className="input-label">{isAr ? 'التاريخ' : 'Date'}</label>
                 <input className="input-field" type="date" value={new Date().toISOString().split('T')[0]} readOnly />

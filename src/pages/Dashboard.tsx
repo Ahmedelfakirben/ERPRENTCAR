@@ -258,7 +258,7 @@ const Dashboard = () => {
               {isAr ? 'عرض كل العقود' : 'Voir tous los contrats'}
             </button>
           </div>
-          <div className="table-container">
+          <div className="table-responsive">
             <table className="data-table">
               <thead>
                 <tr>

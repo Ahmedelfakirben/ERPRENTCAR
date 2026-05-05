@@ -1,14 +1,26 @@
 .vehicle-detail-page {
-  padding: var(--spacing-8);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-6);
+  background: var(--bg-content);
+  min-height: 100%;
+}
+
+@media (max-width: 768px) {
+  .vehicle-detail-page {
+    padding-top: 0;
+  }
+  .vehicle-detail-header-group {
+    padding: 1rem 1rem 0;
+    gap: 0.75rem;
+  }
 }
 
 .detail-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* Hero Card */
@@ -99,6 +111,14 @@
   padding: var(--spacing-4) 0;
   border-bottom: 1px solid var(--border);
   gap: var(--spacing-4);
+}
+
+@media (max-width: 640px) {
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 0.75rem 0;
+  }
 }
 
 .info-row:last-child { border-bottom: none; }
@@ -246,17 +266,79 @@
   font-size: 0.75rem;
 }
 
-/* Tab Bar */
+/* Header Group (Not sticky anymore to allow hero to scroll up) */
+.vehicle-detail-header-group {
+  flex-shrink: 0;
+  padding: var(--spacing-8) var(--spacing-8) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  background: var(--bg-content);
+  z-index: 20;
+}
+
+/* Content Area */
+.vehicle-detail-content-area {
+  padding: var(--spacing-6) var(--spacing-8) var(--spacing-8);
+}
+
+/* Tab Bar - NOW STICKY */
 .tab-bar {
+  position: sticky;
+  top: 0;
   display: flex;
   gap: var(--spacing-2);
-  margin-bottom: var(--spacing-4);
+  margin-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .tab-bar {
+    top: var(--header-height); /* Stay below mobile header */
+    padding: 0.6rem 0.5rem;
+  }
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: block;
+  height: 3px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.tab {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 700px) {
   .vehicle-hero-image-wrap { width: 100%; min-height: 200px; }
-  .vehicle-hero-left { padding: 1.25rem; }
-  .vehicle-hero-stats { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .vehicle-hero-left { padding: 1.5rem 1.25rem; }
+  .vehicle-hero-stats { 
+    border-radius: 0 0 var(--r-lg) var(--r-lg); 
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero-rate {
+    grid-column: span 2;
+    margin-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 0.5rem;
+  }
 }
 
 /* Quick Stats */

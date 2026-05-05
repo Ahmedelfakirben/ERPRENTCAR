@@ -13,7 +13,9 @@
 .fleet-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .fleet-header h1 {
@@ -206,12 +208,10 @@
   margin-left: 2px;
 }
 
-/* Empty state */
-.empty-state {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 4rem 2rem;
-  text-align: center;
-  color: var(--text-3);
+@media (max-width: 768px) {
+  .fleet-page { padding: 1rem; }
+  .fleet-filter-bar { padding: 0.75rem; gap: 0.75rem; }
+  .filter-pills { width: 100%; overflow-x: auto; }
+  .filter-divider { display: none; }
+  .search-field { min-width: 100%; }
 }

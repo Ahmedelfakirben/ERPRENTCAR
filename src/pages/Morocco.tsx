@@ -134,21 +134,29 @@ const Morocco = () => {
         {tab === 'police' && (
           <div className="animate-fade-in mt-10">
             <div className="card p-0 overflow-hidden shadow-sm">
-                <div className="police-sheet-header p-8 border-bottom bg-surface-2 flex justify-between items-center flex-wrap gap-4">
-                  <h3 className="m-0 font-extrabold">{isAr ? 'تقرير يومي' : 'Rapport Journalier'}</h3>
-                  <div className="flex items-center gap-4 no-print">
-                    <span className="text-sm font-medium text-secondary">{isAr ? 'من:' : 'Du:'}</span>
-                    <input type="date" className="input-field" style={{ width: 'auto', padding: '0.4rem 0.8rem' }} value={startDate} onChange={e => setStartDate(e.target.value)} />
-                    <span className="text-sm font-medium text-secondary">{isAr ? 'إلى:' : 'Au:'}</span>
-                    <input type="date" className="input-field" style={{ width: 'auto', padding: '0.4rem 0.8rem' }} value={endDate} onChange={e => setEndDate(e.target.value)} />
+                <div className="police-sheet-header p-8 border-bottom bg-surface-2 flex justify-between items-center flex-wrap gap-6">
+                  <div className="flex items-center gap-3">
+                    <FileText size={24} className="text-gold" />
+                    <h3 className="m-0 font-extrabold text-xl">{isAr ? 'تقرير يومي' : 'Rapport Journalier'}</h3>
+                  </div>
+                  
+                  <div className="flex items-center gap-0 flex-wrap no-print card-glass" style={{ padding: '2px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', flex: '0 1 auto' }}>
+                    <div className="flex items-center gap-2 px-3 py-1 border-r border-border" style={{ minWidth: '140px' }}>
+                      <span className="text-xs font-bold text-secondary uppercase tracking-wider">{isAr ? 'من:' : 'Du:'}</span>
+                      <input type="date" className="input-field border-none bg-transparent p-0" style={{ boxShadow: 'none', minHeight: 'auto', fontSize: '0.8rem', width: '100px' }} value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1" style={{ minWidth: '140px' }}>
+                      <span className="text-xs font-bold text-secondary uppercase tracking-wider">{isAr ? 'إلى:' : 'Au:'}</span>
+                      <input type="date" className="input-field border-none bg-transparent p-0" style={{ boxShadow: 'none', minHeight: 'auto', fontSize: '0.8rem', width: '100px' }} value={endDate} onChange={e => setEndDate(e.target.value)} />
+                    </div>
                     {(startDate || endDate) && (
-                      <button className="btn btn-ghost btn-sm text-error" onClick={() => { setStartDate(''); setEndDate(''); }}>
-                         <X size={14} className="mr-1" /> {isAr ? 'مسح الفلتر' : 'Effacer'}
+                      <button className="btn btn-ghost btn-sm text-error ml-2" onClick={() => { setStartDate(''); setEndDate(''); }}>
+                         <X size={14} />
                       </button>
                     )}
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-4 table-responsive">
                   <table className="data-table">
                     <thead>
                       <tr>
@@ -212,7 +220,7 @@ const Morocco = () => {
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-4 table-responsive">
                   <table className="data-table">
                     <thead>
                       <tr>

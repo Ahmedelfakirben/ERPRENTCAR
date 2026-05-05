@@ -111,7 +111,7 @@ const Clients = () => {
         </div>
 
         {/* Client Table */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card" style={{ padding: 0 }}>
           <div className="table-responsive">
             <table className="data-table">
               <thead>

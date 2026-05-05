@@ -9,6 +9,13 @@
   min-height: 100%;
 }
 
+@media (max-width: 768px) {
+  .contracts-page {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+
 /* ---- Header ---- */
 .contracts-header {
   display: flex;
@@ -24,17 +31,6 @@
 }
 
 /* ---- Tabs ---- */
-.tab-bar {
-  display: inline-flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-full);
-  padding: 4px;
-  gap: 4px;
-  box-shadow: var(--shadow-xs);
-  width: fit-content;
-}
-
 .tab {
   padding: 0.45rem 1.1rem;
   border-radius: var(--r-full);
