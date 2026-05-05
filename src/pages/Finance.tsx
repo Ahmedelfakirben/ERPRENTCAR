@@ -8,14 +8,13 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PageLoader from '../components/layout/PageLoader';
-import { saveAs } from 'file-saver';
-import ExcelJS from 'exceljs';
+
 
 const Finance = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
-  const lang = i18n.language.startsWith('ar') ? 'ar' : 'fr';
+
 
   const [tab, setTab] = useState<'contracts' | 'invoices' | 'expenses' | 'cash'>('contracts');
   const [loading, setLoading] = useState(true);
