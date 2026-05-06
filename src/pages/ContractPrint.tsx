@@ -78,18 +78,18 @@ const ContractPrint = () => {
       <div className="print-sheet classic-format">
         
         {/* Header */}
-        <div className="classic-header-with-logo" style={{ position: 'relative', display: 'flex', justifyContent: 'center', minHeight: '180px' }}>
+        <div className="classic-header-with-logo" style={{ position: 'relative', display: 'flex', justifyContent: 'center', minHeight: '140px' }}>
           
           {/* Absolute Left: Logo & Contract Number */}
           <div className="header-logo text-center" style={{ position: 'absolute', left: 0, top: 0 }}>
             <Logo201M size="lg" variant="print" />
-            <div className="contract-num-under-logo font-bold text-lg" style={{ marginTop: '5px' }}>
+            <div className="contract-num-under-logo font-bold text-lg" style={{ marginTop: '2px' }}>
               N° {c.contract_number}
             </div>
           </div>
           
           {/* Centered: Phones & Title */}
-          <div className="header-text" style={{ textAlign: 'center', paddingTop: '10px' }}>
+          <div className="header-text" style={{ textAlign: 'center', paddingTop: '5px' }}>
             <div className="phones" style={{ fontSize: '14pt', fontWeight: 'bold', marginBottom: '8px' }}>
               06 07 51 94 79 / 06 63 29 93 83
             </div>
@@ -111,7 +111,7 @@ const ContractPrint = () => {
           {/* CONDUCTEUR COLUMN */}
           <div className="classic-box col-conducteur">
             <div className="box-title">CONDUCTEUR / السائق الأول</div>
-            <div className="box-content">
+            <div className="box-content" style={{ fontSize: '8.5pt', lineHeight: '1' }}>
               <div className="data-row"><span className="label">PRENOM / الإسم:</span> <span className="value">{cl?.full_name?.split(' ')[0]}</span></div>
               <div className="data-row"><span className="label">NOM / النسب:</span> <span className="value">{cl?.full_name?.split(' ')[1] || ''}</span></div>
               <div className="data-row"><span className="label">DATE DE NAISSANCE / تاريخ الازدياد:</span> <span className="value">{cl?.birth_date || ''}</span></div>
@@ -130,7 +130,7 @@ const ContractPrint = () => {
           {/* VEHICULE COLUMN */}
           <div className="classic-box col-vehicule">
             <div className="box-title">VEHICULE / السيارة</div>
-            <div className="box-content">
+            <div className="box-content" style={{ fontSize: '8.5pt', lineHeight: '1' }}>
               <div className="data-row"><span className="label">MARQUE / العلامة:</span> <span className="value">{v?.brand} {v?.model}</span></div>
               <div className="data-row"><span className="label">IMMATRICULATION / الترقيم:</span> <span className="value">{v?.plate}</span></div>
               <div className="data-row"><span className="label">DATE DE DEPART / تاريخ المغادرة:</span> <span className="value">{c.start_date}</span></div>
@@ -147,9 +147,9 @@ const ContractPrint = () => {
         </div>
 
         {/* AUTRE CONDUCTEUR */}
-        <div className="classic-box mt-10">
+        <div className="classic-box mt-2">
            <div className="box-title">AUTRE CONDUCTEUR / السائق الثاني</div>
-           <div className="box-content horizontal-layout">
+            <div className="box-content horizontal-layout" style={{ fontSize: '9pt', padding: '5px' }}>
               <div className="data-row"><span className="label">PRENOM ET NOM / الإسم والنسب:</span> <span className="value">{c.second_driver_name || ''}</span></div>
               <div className="data-row"><span className="label">DATE DE NAISSANCE / ADRESSE / تاريخ الازدياد والعنوان:</span> <span className="value">{c.second_driver_birth || ''} {c.second_driver_address ? `- ${c.second_driver_address}` : ''}</span></div>
               <div className="data-row"><span className="label">PERMIS N° / DÉLIVRÉ LE / رخصة السياقة وتاريخ الإصدار:</span> <span className="value">{c.second_driver_license || ''} {c.second_driver_license_date ? `- ${c.second_driver_license_date}` : ''}</span></div>
@@ -157,7 +157,7 @@ const ContractPrint = () => {
         </div>
 
         {/* ÉTAT DU VÉHICULE */}
-        <div className="classic-box mt-10">
+        <div className="classic-box mt-2">
            <div className="box-title">ÉTAT DU VÉHICULE / حالة السيارة</div>
            <div className="box-content etat-grid">
               <div className="etat-col croquis-section">
@@ -225,30 +225,65 @@ const ContractPrint = () => {
            </div>
         </div>
 
-        {/* DISCLAIMER */}
-        <div className="classic-disclaimer mt-10">
-           <p>LE CLIENT EST SEUL RESPONSABLE DES DELITS, CONTRAVENTIONS ET INFRACTIONS AU CODE DE LA ROUTE COMMISES PENDANT LA DURÉE DE LA LOCATION.</p>
-           <p style={{ marginTop: '4px' }}>يتحمل الزبون وحده المسؤولية عن الجرائم والمخالفات وانتهاكات قانون السير المرتكبة خلال فترة الكراء.</p>
-           <p style={{ marginTop: '6px', fontStyle: 'italic', fontSize: '0.9em' }}>CE CONTRAT DOIT ÊTRE PRÉSENTÉ EN CAS DE CONTRÔLE DE LA POLICE / يجب تقديم هذا العقد في حالة مراقبة الشرطة</p>
+        {/* LEGAL NOTE */}
+        <div className="classic-disclaimer mt-2" style={{ border: '1px solid #000', padding: '6px', fontSize: '7pt', lineHeight: '1.2' }}>
+           <div className="flex gap-4">
+              <div style={{ flex: 1, borderRight: '1px solid #000', paddingRight: '10px' }}>
+                 <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>NOTE IMPORTANTE:</p>
+                 <p>Le Locataire s'expose à des poursuites judiciaires 24 Heures aprés la date convenue au départ si le véhicule n'est toujours pas retourné, et cela sons que 2S1M RENT CAR ait été informé d'un prolongation de location et ait reçu la somme suplémentaire dûe. En cas de fortuit locataire est responsable de tous dégâts d'aprés la deuxième signature. Le véhicule ne doit être conduit que par le locataire.</p>
+              </div>
+              <div style={{ flex: 1, textAlign: 'right', direction: 'rtl' }}>
+                 <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>ملاحظة هامة:</p>
+                 <p>يتعرض المستأجر للملاحقة القضائية بعد مرور 24 ساعة من التاريخ المتفق عليه إذا لم يتم إرجاع السيارة، وذلك ما لم يتم إبلاغ شركة 2S1M RENT CAR بتمديد الإيجار ودفع المبلغ الإضافي المستحق. في حالة وقوع حادث عرضي، يكون المستأجر مسؤولاً عن جميع الأضرار بعد التوقيع الثاني. لا يجب قيادة السيارة إلا من طرف المستأجر.</p>
+              </div>
+           </div>
         </div>
 
+        {/* OLD DISCLAIMER (OPTIONAL - REMOVING TO AVOID CLUTTER) */}
+
         {/* FINANCIALS & SIGNATURE */}
-        <div className="classic-footer-grid mt-10">
+        <div className="classic-footer-grid mt-2">
            <div className="financials">
               <div className="data-row"><span className="label">AVANCE / التسبيق:</span> <span className="value">{c.total_ttc?.toLocaleString()} MAD</span></div>
               <div className="data-row"><span className="label">RESTE A PAYER / الباقي:</span> <span className="value">0.00 MAD</span></div>
            </div>
-           <div className="signatures">
-              <div className="sig-title">Signature Client / توقيع الزبون</div>
+           <div className="signatures-group" style={{ display: 'flex', justifyContent: 'space-between', gap: '40px' }}>
+              <div className="signatures" style={{ flex: 1 }}>
+                 <div className="sig-title" style={{ fontSize: '9pt' }}>Signature Client / توقيع الزبون</div>
+                 <div className="sig-box" style={{ height: '50px', border: '1px solid #eee', marginTop: '5px' }}></div>
+              </div>
+              <div className="signatures" style={{ flex: 1 }}>
+                 <div className="sig-title" style={{ fontSize: '9pt' }}>Signature Entreprise / توقيع الشركة</div>
+                 <div className="sig-box" style={{ height: '50px', border: '1px solid #eee', marginTop: '5px' }}></div>
+              </div>
            </div>
         </div>
 
         {/* BOTTOM FOOTER */}
-        <div className="classic-bottom-footer mt-20">
-           <p>Adress : RUE 14 AV MIHAMED BENNOU A CARIER BIUJARAH TETOUAN.</p>
-           <p>IF: / TP: / RC:</p>
+        <div className="classic-bottom-footer mt-10" style={{ borderTop: '1px solid #000', paddingTop: '5px', textAlign: 'center', fontSize: '9pt' }}>
+           <p style={{ fontWeight: 'bold' }}>5 RUE 14 AV MED BENNOUNA QUARTIER BOUJARRAH TETOUAN</p>
+           <p>0660 292 821 / 0531 333 293 / 0618 399 606  -  ICE: 003912377000082</p>
         </div>
+      </div>
 
+      {/* Second Page: Terms & Conditions (Static Image) */}
+      <div className="print-sheet conditions-page" style={{ 
+        pageBreakBefore: 'always', 
+        padding: '10px',
+        textAlign: 'center',
+        backgroundColor: '#fff'
+      }}>
+        <img 
+          src="/condiciones.jpg" 
+          alt="Conditions" 
+          style={{ 
+            width: '100%', 
+            height: 'auto', 
+            maxHeight: '1000px', 
+            margin: '0 auto',
+            display: 'block' 
+          }} 
+        />
       </div>
     </div>
   );

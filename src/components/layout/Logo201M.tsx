@@ -21,9 +21,6 @@ const Logo201M: React.FC<LogoProps> = ({ className = '', size = 'md', variant = 
   if (variant === 'badge' || variant === 'print') {
     return (
       <div className={`logo-badge ${className}`} style={{
-        borderRadius: '50%',
-        background: variant === 'print' ? 'transparent' : 'var(--sidebar-bg)',
-        border: variant === 'print' ? '2px solid #000' : '1px solid rgba(255,107,0,0.15)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '8px',
         width: 'fit-content'
