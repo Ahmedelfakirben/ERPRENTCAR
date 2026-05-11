@@ -20,6 +20,7 @@ import InvoicePrint from './pages/InvoicePrint';
 import Morocco from './pages/Morocco';
 import Settings from './pages/Settings';
 import Alerts from './pages/Alerts';
+import Reports from './pages/Reports';
 
 import Preloader from './components/layout/Preloader';
 
@@ -50,6 +51,7 @@ function App() {
             <Route path="/morocco" element={<Morocco />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/reports" element={<Reports />} />
           </Route>
         </Route>
       </Routes>

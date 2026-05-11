@@ -531,49 +531,67 @@
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: row; /* Horizontal on mobile too */
+    flex-direction: column; /* Vertical on mobile */
   }
 
   .sidebar {
     position: fixed;
     top: 0;
-    left: 0;
+    left: -280px;
     bottom: 0;
-    width: 70px; /* Slim by default on mobile */
-    transform: translateX(0); /* Always visible */
-    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-    z-index: 1000;
+    width: 280px;
+    transform: translateX(0);
+    box-shadow: 4px 0 25px rgba(0,0,0,0.5);
+    z-index: 2000;
+    transition: left var(--t-normal) cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* When expanded on mobile (isMobileMenuOpen or !isCollapsed) */
-  .sidebar.show, .app-container:not(.sidebar-collapsed) .sidebar {
-    width: 280px;
+  /* When expanded on mobile (isMobileMenuOpen) */
+  .sidebar.show {
+    left: 0;
+    width: 280px !important;
+  }
+  
+  .sidebar.show .sidebar-link span,
+  .sidebar.show .user-info,
+  .sidebar.show button > svg:last-child {
+    display: block !important;
+  }
+  .sidebar.show .sidebar-icon {
+    margin-right: 0.75rem !important;
   }
 
   [dir="rtl"] .sidebar {
     left: auto;
+    right: -280px;
+    box-shadow: -4px 0 25px rgba(0,0,0,0.5);
+    transition: right var(--t-normal) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [dir="rtl"] .sidebar.show {
     right: 0;
-    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
   }
 
   .mobile-header {
-    display: none; /* Persistent sidebar means we don't need mobile top header */
+    display: flex; /* Show mobile top header */
   }
 
   .main-content {
-    margin-top: 0;
-    margin-left: 70px; /* Space for persistent slim sidebar */
-    width: calc(100vw - 70px);
-    height: 100vh;
+    margin-top: 60px; /* Space for top header */
+    margin-left: 0;
+    width: 100%;
+    max-width: 100vw;
+    height: calc(100vh - 60px);
+    overflow-x: hidden;
   }
 
   [dir="rtl"] .main-content {
     margin-left: 0;
-    margin-right: 70px;
+    margin-right: 0;
   }
 
   .mobile-close-btn {
-    display: none;
+    display: flex;
   }
 }
 

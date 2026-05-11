@@ -22,6 +22,9 @@ const Settings = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', role: 'employee' });
   const [savingUser, setSavingUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
 
   useEffect(() => {
     // Sync dark mode from local storage or document attribute
@@ -116,6 +119,58 @@ const Settings = () => {
       alert(err.message || 'Error creating user');
     } finally {
       setSavingUser(false);
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    setSavingUser(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editingUser.full_name,
+          role: editingUser.role
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+      alert(isAr ? 'تم تحديث المستخدم بنجاح' : 'Utilisateur mis à jour avec succès');
+      setEditingUser(null);
+      fetchSettings();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error updating user');
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingUser || !newPassword) {
+      alert(isAr ? 'يرجى إدخال كلمة المرور الجديدة' : 'Veuillez saisir le nouveau mot de passe');
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert(isAr ? 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل' : 'Le mot de passe doit comporter au moins 6 caractères');
+      return;
+    }
+
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.rpc('admin_reset_user_password', {
+        target_user_id: editingUser.id,
+        new_password: newPassword
+      });
+
+      if (error) throw error;
+      alert(isAr ? 'تم تغيير كلمة المرور بنجاح' : 'Mot de passe modifié avec succès');
+      setNewPassword('');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error resetting password');
+    } finally {
+      setSendingReset(false);
     }
   };
 
@@ -248,7 +303,7 @@ const Settings = () => {
                           </span>
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <button className="btn btn-ghost btn-sm" title="Modifier">
+                          <button className="btn btn-ghost btn-sm" title="Modifier" onClick={() => setEditingUser(u)}>
                             <SettingsIcon size={16} />
                           </button>
                         </td>
@@ -309,6 +364,69 @@ const Settings = () => {
                  <button className="btn btn-outline" onClick={() => setShowAddUser(false)}>{isAr ? 'إلغاء' : 'Annuler'}</button>
                  <button className="btn btn-primary px-8" onClick={handleCreateUser} disabled={savingUser}>
                     {savingUser ? <Loader2 className="animate-spin" size={16} /> : (isAr ? 'إنشاء' : 'Créer')}
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="modal-overlay" onClick={() => setEditingUser(null)}>
+           <div className="modal-content animate-scale-in" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                 <h3 className="m-0">{isAr ? 'تعديل المستخدم' : 'Modifier l\'Utilisateur'}</h3>
+                 <button className="btn btn-ghost" onClick={() => setEditingUser(null)}><X size={20} /></button>
+              </div>
+
+              <div className="form-grid">
+                 <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="input-label">{isAr ? 'الاسم الكامل' : 'Nom Complet'}</label>
+                    <input className="input-field" value={editingUser.full_name || ''} 
+                      onChange={e => setEditingUser({...editingUser, full_name: e.target.value})} />
+                 </div>
+                 <div className="input-group">
+                    <label className="input-label">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                    <input className="input-field" type="email" value={editingUser.email || ''} disabled style={{ opacity: 0.6 }} />
+                    <small className="text-xs text-secondary mt-1 block">
+                      {isAr ? 'لا يمكن تغيير البريد الإلكتروني هنا' : 'L\'email ne peut pas être modifié ici'}
+                    </small>
+                 </div>
+                 <div className="input-group">
+                    <label className="input-label">{isAr ? 'الدور' : 'Rôle'}</label>
+                    <select className="input-field" value={editingUser.role || 'employee'} onChange={e => setEditingUser({...editingUser, role: e.target.value})}>
+                       <option value="employee">{isAr ? 'موظف' : 'Employé'}</option>
+                       <option value="admin">Admin</option>
+                    </select>
+                 </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-top">
+                <h4 className="text-sm font-bold mb-3">{isAr ? 'إعادة تعيين كلمة المرور' : 'Réinitialiser le mot de passe'}</h4>
+                <div className="flex gap-2 items-center">
+                  <input 
+                    className="input-field" 
+                    type="text" 
+                    placeholder={isAr ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'} 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <button 
+                    className="btn btn-outline whitespace-nowrap" 
+                    onClick={handleResetPassword} 
+                    disabled={sendingReset || !newPassword}
+                  >
+                    {sendingReset ? <Loader2 className="animate-spin" size={16} /> : (isAr ? 'تغيير' : 'Changer')}
+                  </button>
+                </div>
+                <small className="text-xs text-warning mt-2 block">
+                  {isAr ? 'سيتم تغيير كلمة المرور فوراً ولا يمكن التراجع.' : 'Le mot de passe sera changé immédiatement.'}
+                </small>
+              </div>
+
+              <div className="flex gap-4 mt-8 justify-end">
+                 <button className="btn btn-outline" onClick={() => { setEditingUser(null); setNewPassword(''); }}>{isAr ? 'إلغاء' : 'Annuler'}</button>
+                 <button className="btn btn-primary px-8" onClick={handleUpdateUser} disabled={savingUser}>
+                    {savingUser ? <Loader2 className="animate-spin" size={16} /> : (isAr ? 'حفظ' : 'Enregistrer')}
                  </button>
               </div>
            </div>

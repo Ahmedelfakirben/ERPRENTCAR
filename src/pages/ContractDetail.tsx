@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, FileText, Download, Printer, User, CarFront,
   Fuel, Sparkles, Gauge, CreditCard, CheckCircle2, Camera, Check, FileCheck,
-  Loader2, AlertTriangle, ArrowRight, Calendar, X as XIcon, ShieldAlert
+  Loader2, AlertTriangle, ArrowRight, Calendar, X as XIcon, ShieldAlert,
+  CalendarPlus, Wrench
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ContractDetail.css';
@@ -22,7 +23,19 @@ const ContractDetail = () => {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showProlongModal, setShowProlongModal] = useState(false);
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [incidentStep, setIncidentStep] = useState(1);
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [loadingAction, setLoadingAction] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
+  const [prolongData, setProlongData] = useState({ new_end_date: '', notes: '' });
+  const [incidentData, setIncidentData] = useState({
+    incident_date: today, incident_time: new Date().toTimeString().slice(0,5),
+    type: 'breakdown', vehicle_status: 'in_workshop',
+    description: '', action: 'close_today', replacement_vehicle_id: ''
+  });
 
   const [returnData, setReturnData] = useState({
     km_in: 0,
@@ -123,7 +136,8 @@ const ContractDetail = () => {
         .from('vehicles')
         .update({
           status: 'available',
-          current_km: returnData.km_in
+          current_km: returnData.km_in,
+          damages: damagesIn
         })
         .eq('id', contract.vehicle_id);
 
@@ -154,8 +168,11 @@ const ContractDetail = () => {
 
       if (error) throw error;
       
-      // Optional: update vehicle KM if it changed
-      await supabase.from('vehicles').update({ current_km: checkoutData.km_out }).eq('id', contract.vehicle_id);
+      // Update vehicle KM and damages
+      await supabase.from('vehicles').update({ 
+        current_km: checkoutData.km_out,
+        damages: damagesOut
+      }).eq('id', contract.vehicle_id);
 
       setShowCheckoutModal(false);
       fetchContractDetails();
@@ -165,6 +182,87 @@ const ContractDetail = () => {
     } finally {
       setLoadingAction(false);
     }
+  };
+
+  const handleProlong = async () => {
+    if (!contract || !prolongData.new_end_date) return;
+    setLoadingAction(true);
+    try {
+      const origDays = Math.max(1, Math.ceil((new Date(contract.end_date).getTime() - new Date(contract.start_date).getTime()) / 86400000));
+      const newDays = Math.max(1, Math.ceil((new Date(prolongData.new_end_date).getTime() - new Date(contract.start_date).getTime()) / 86400000));
+      const ppd = contract.total_ttc / origDays;
+      const newTotal = Math.round(newDays * ppd);
+      await supabase.from('contracts').update({
+        end_date: prolongData.new_end_date,
+        original_end_date: contract.original_end_date || contract.end_date,
+        prolongation_date: today,
+        total_days: newDays, total_ttc: newTotal,
+        notes: (contract.notes || '') + ` | Prolongé jusqu'au ${prolongData.new_end_date}`
+      }).eq('id', id);
+      setShowProlongModal(false);
+      fetchContractDetails();
+    } catch (err) { console.error(err); }
+    finally { setLoadingAction(false); }
+  };
+
+  const fetchAvailableVehicles = async () => {
+    if (!contract || !incidentData.incident_date) return;
+    const { data: vData } = await supabase.from('vehicles').select('id, brand, model, plate').eq('status', 'available');
+    
+    // Get contracts that overlap with the new replacement contract dates
+    const { data: overlapping } = await supabase.from('contracts')
+      .select('vehicle_id')
+      .in('status', ['active', 'pending'])
+      .lte('start_date', contract.end_date)
+      .gte('end_date', incidentData.incident_date);
+    
+    const overlapIds = overlapping?.map(c => c.vehicle_id) || [];
+    setAvailableVehicles(vData?.filter(v => !overlapIds.includes(v.id)) || []);
+  };
+
+  const handleIncident = async () => {
+    if (!contract) return;
+    setLoadingAction(true);
+    try {
+      const cDate = incidentData.incident_date;
+      const origDays = Math.max(1, Math.ceil((new Date(contract.end_date).getTime() - new Date(contract.start_date).getTime()) / 86400000));
+      const actualDays = Math.max(1, Math.ceil((new Date(cDate).getTime() - new Date(contract.start_date).getTime()) / 86400000));
+      const ppd = contract.total_ttc / origDays;
+      const closingTotal = Math.round(actualDays * ppd);
+      const vStatus = incidentData.vehicle_status === 'in_workshop' ? 'maintenance' : 'blocked';
+
+      await supabase.from('contracts').update({
+        status: 'completed', actual_return_date: cDate, end_date: cDate,
+        total_ttc: closingTotal, total_days: actualDays,
+        notes: (contract.notes || '') + ` | PANNE (${incidentData.type}): ${incidentData.description}`
+      }).eq('id', id);
+      await supabase.from('vehicles').update({ status: vStatus }).eq('id', contract.vehicle_id);
+      await supabase.from('incidents').insert({
+        contract_id: id, vehicle_id: contract.vehicle_id,
+        incident_date: cDate, incident_time: incidentData.incident_time,
+        type: incidentData.type, description: incidentData.description,
+        vehicle_status: incidentData.vehicle_status, action_taken: incidentData.action
+      });
+
+      if (incidentData.action === 'change_vehicle' && incidentData.replacement_vehicle_id) {
+        const remDays = Math.max(1, Math.ceil((new Date(contract.end_date).getTime() - new Date(cDate).getTime()) / 86400000));
+        const { data: nc } = await supabase.from('contracts').insert({
+          client_id: contract.client_id, vehicle_id: incidentData.replacement_vehicle_id,
+          start_date: cDate, end_date: contract.end_date,
+          total_days: remDays, total_ttc: Math.round(remDays * ppd),
+          status: 'active', time_out: contract.time_out, time_in: contract.time_in,
+          fuel_level_out: 'full',
+          notes: `Remplacement panne - contrat original: ${contract.contract_number}`
+        }).select().single();
+        await supabase.from('vehicles').update({ status: 'rented' }).eq('id', incidentData.replacement_vehicle_id);
+        setShowIncidentModal(false);
+        if (nc) navigate(`/contracts/${nc.id}`);
+        return;
+      }
+      setShowIncidentModal(false);
+      fetchContractDetails();
+    } catch (err) { console.error(err); alert(isAr ? 'حدث خطأ' : 'Erreur'); }
+    finally { setLoadingAction(false); }
   };
 
   const handleCancelContract = async () => {
@@ -258,6 +356,30 @@ const ContractDetail = () => {
               </button>
             );
           })()}
+
+          {/* Prolonger - only active */}
+          {c.status === 'active' && (
+            <button
+              className="btn bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-400/30"
+              onClick={() => { setProlongData({ new_end_date: c.end_date, notes: '' }); setShowProlongModal(true); }}
+              disabled={loadingAction}
+            >
+              <CalendarPlus size={16} />
+              {isAr ? 'تمديد العقد' : 'Prolonger'}
+            </button>
+          )}
+
+          {/* Incident - only active */}
+          {c.status === 'active' && (
+            <button
+              className="btn bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white border border-orange-400/30"
+              onClick={() => { setIncidentStep(1); setShowIncidentModal(true); }}
+              disabled={loadingAction}
+            >
+              <Wrench size={16} />
+              {isAr ? 'إعلان عطل' : 'Déclarer Panne'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -804,13 +926,28 @@ const ContractDetail = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setShowCheckoutModal(false)}>{isAr ? 'إلغاء' : 'Annuler'}</button>
-              <button className="btn btn-primary" onClick={handleCheckoutContract} disabled={loadingAction}>
-                {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                {isAr ? 'تأكيد الخروج' : 'Confirmer le Départ'}
-              </button>
-            </div>
+              {/* Footer */}
+              <div className="modal-footer" style={{ flexDirection: 'column', gap: 12 }}>
+                {today !== c.start_date && (
+                  <div className="w-full p-3 rounded-lg bg-warning/10 text-warning border border-warning/20 text-sm flex items-center gap-2">
+                    <AlertTriangle size={18} />
+                    {isAr 
+                      ? 'لا يمكنك إجراء الخروج (Check-out) إلا في يوم بدء العقد المبرمج.'
+                      : 'Le Check-out n\'est autorisé que le jour exact de début du contrat.'}
+                  </div>
+                )}
+                <div className="flex w-full gap-3 justify-end">
+                  <button className="btn btn-outline" onClick={() => setShowCheckoutModal(false)}>{isAr ? 'إلغاء' : 'Annuler'}</button>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={handleCheckoutContract} 
+                    disabled={loadingAction || today !== c.start_date}
+                  >
+                    {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                    {isAr ? 'تأكيد الخروج' : 'Confirmer le Départ'}
+                  </button>
+                </div>
+              </div>
           </div>
         </div>
       )}
@@ -846,6 +983,175 @@ const ContractDetail = () => {
                 {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
                 {isAr ? 'تأكيد الإلغاء' : 'Confirmer'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL PROLONGATION ── */}
+      {showProlongModal && (() => {
+        const origDays = Math.max(1, Math.ceil((new Date(c.end_date).getTime() - new Date(c.start_date).getTime()) / 86400000));
+        const newDays = prolongData.new_end_date ? Math.max(1, Math.ceil((new Date(prolongData.new_end_date).getTime() - new Date(c.start_date).getTime()) / 86400000)) : origDays;
+        const ppd = c.total_ttc / origDays;
+        const newTotal = Math.round(newDays * ppd);
+        const extraDays = newDays - origDays;
+        const extraCost = Math.round(extraDays * ppd);
+        return (
+          <div className="modal-overlay" onClick={() => setShowProlongModal(false)}>
+            <div className="modal-content animate-scale-in" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500/10 text-blue-600 rounded-xl flex items-center justify-center"><CalendarPlus size={20} /></div>
+                  <div>
+                    <h3 className="m-0">{isAr ? 'تمديد العقد' : 'Prolonger le Contrat'}</h3>
+                    <p className="text-secondary text-sm m-0">{isAr ? 'تاريخ الانتهاء الحالي:' : 'Fin actuelle:'} <strong>{c.end_date}</strong></p>
+                  </div>
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowProlongModal(false)}><XIcon size={18} /></button>
+              </div>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div className="input-group">
+                  <label className="input-label">{isAr ? 'تاريخ الانتهاء الجديد' : 'Nouvelle date de fin'}</label>
+                  <input type="date" className="input-field" min={c.end_date}
+                    value={prolongData.new_end_date}
+                    onChange={e => setProlongData({ ...prolongData, new_end_date: e.target.value })} />
+                </div>
+                {extraDays > 0 && (
+                  <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16, display: 'flex', justifyContent: 'space-between' }}>
+                    <div><div className="text-secondary text-sm">{isAr ? 'أيام إضافية' : 'Jours supplémentaires'}</div><div className="font-bold text-lg">+{extraDays} {isAr ? 'أيام' : 'jours'}</div></div>
+                    <div style={{ textAlign: 'right' }}><div className="text-secondary text-sm">{isAr ? 'التكلفة الإضافية' : 'Coût supplémentaire'}</div><div className="font-bold text-lg text-primary">+{extraCost} MAD</div></div>
+                    <div style={{ textAlign: 'right' }}><div className="text-secondary text-sm">{isAr ? 'المجموع الجديد' : 'Nouveau total'}</div><div className="font-bold text-xl" style={{ color: 'var(--color-gold)' }}>{newTotal} MAD</div></div>
+                  </div>
+                )}
+                <div className="input-group">
+                  <label className="input-label">{isAr ? 'ملاحظات' : 'Notes'}</label>
+                  <input type="text" className="input-field" value={prolongData.notes} onChange={e => setProlongData({ ...prolongData, notes: e.target.value })} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setShowProlongModal(false)}>{isAr ? 'إلغاء' : 'Annuler'}</button>
+                <button className="btn btn-primary" onClick={handleProlong} disabled={loadingAction || !prolongData.new_end_date || prolongData.new_end_date <= c.end_date}>
+                  {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                  {isAr ? 'تأكيد التمديد' : 'Confirmer la prolongation'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── MODAL INCIDENT / PANNE ── */}
+      {showIncidentModal && (
+        <div className="modal-overlay" onClick={() => setShowIncidentModal(false)}>
+          <div className="modal-content animate-scale-in" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500/10 text-orange-600 rounded-xl flex items-center justify-center"><Wrench size={20} /></div>
+                <div>
+                  <h3 className="m-0">{isAr ? 'إعلان عطل' : 'Déclarer une Panne'}</h3>
+                  <p className="text-secondary text-sm m-0">{isAr ? `الخطوة ${incidentStep} من 2` : `Étape ${incidentStep} sur 2`}</p>
+                </div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowIncidentModal(false)}><XIcon size={18} /></button>
+            </div>
+
+            {incidentStep === 1 && (
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div className="flex gap-3">
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label className="input-label">{isAr ? 'تاريخ العطل' : 'Date de la panne'}</label>
+                    <input type="date" className="input-field" value={incidentData.incident_date} max={c.end_date} min={c.start_date}
+                      onChange={e => setIncidentData({ ...incidentData, incident_date: e.target.value })} />
+                  </div>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label className="input-label">{isAr ? 'الساعة' : 'Heure'}</label>
+                    <input type="time" className="input-field" value={incidentData.incident_time}
+                      onChange={e => setIncidentData({ ...incidentData, incident_time: e.target.value })} />
+                  </div>
+                </div>
+                <div className="input-group">
+                  <label className="input-label">{isAr ? 'نوع العطل' : 'Type de panne'}</label>
+                  <select className="input-field" value={incidentData.type} onChange={e => setIncidentData({ ...incidentData, type: e.target.value })}>
+                    <option value="breakdown">{isAr ? 'عطل ميكانيكي' : 'Panne mécanique'}</option>
+                    <option value="accident">{isAr ? 'حادث' : 'Accident'}</option>
+                    <option value="flat_tire">{isAr ? 'إطار مثقوب' : 'Pneu crevé'}</option>
+                    <option value="other">{isAr ? 'أخرى' : 'Autre'}</option>
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label className="input-label">{isAr ? 'حالة السيارة' : 'État du véhicule'}</label>
+                  <div className="flex gap-3">
+                    {[{ v: 'in_workshop', fr: 'En Atelier', ar: 'في الورشة' }, { v: 'blocked', fr: 'Bloqué en route', ar: 'متوقف في الطريق' }].map(opt => (
+                      <button key={opt.v} onClick={() => setIncidentData({ ...incidentData, vehicle_status: opt.v })}
+                        className={`btn flex-1 ${incidentData.vehicle_status === opt.v ? 'btn-primary' : 'btn-outline'}`}>
+                        {isAr ? opt.ar : opt.fr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="input-group">
+                  <label className="input-label">{isAr ? 'وصف المشكلة' : 'Description du problème'}</label>
+                  <textarea className="input-field" rows={3} value={incidentData.description}
+                    onChange={e => setIncidentData({ ...incidentData, description: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {incidentStep === 2 && (
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <p className="text-secondary">{isAr ? 'اختر الإجراء المناسب:' : 'Choisissez l\'action à effectuer :'}</p>
+                <div className="flex flex-col gap-3">
+                  <button onClick={() => setIncidentData({ ...incidentData, action: 'close_today' })}
+                    className={`btn text-left flex flex-col items-start gap-1 h-auto py-3 ${incidentData.action === 'close_today' ? 'btn-primary' : 'btn-outline'}`}>
+                    <span className="font-bold">{isAr ? '✓ إغلاق العقد اليوم' : '✓ Clôturer le contrat aujourd\'hui'}</span>
+                    <span className="text-xs opacity-80">{isAr ? 'إعادة حساب السعر حسب الأيام الفعلية — السيارة تذهب للورشة' : 'Recalcul du prix selon les jours réels — véhicule en maintenance'}</span>
+                  </button>
+                  <button onClick={() => { setIncidentData({ ...incidentData, action: 'change_vehicle' }); fetchAvailableVehicles(); }}
+                    className={`btn text-left flex flex-col items-start gap-1 h-auto py-3 ${incidentData.action === 'change_vehicle' ? 'btn-primary' : 'btn-outline'}`}>
+                    <span className="font-bold">{isAr ? '🔄 تغيير السيارة' : '🔄 Changer de véhicule'}</span>
+                    <span className="text-xs opacity-80">{isAr ? 'إغلاق هذا العقد وإنشاء عقد جديد بسيارة بديلة' : 'Clôturer ce contrat et créer un nouveau avec un véhicule de remplacement'}</span>
+                  </button>
+                </div>
+                {incidentData.action === 'change_vehicle' && (
+                  <div className="input-group">
+                    <label className="input-label">{isAr ? 'السيارة البديلة' : 'Véhicule de remplacement'}</label>
+                    <select className="input-field" value={incidentData.replacement_vehicle_id}
+                      onChange={e => setIncidentData({ ...incidentData, replacement_vehicle_id: e.target.value })}>
+                      <option value="">{isAr ? '-- اختر سيارة --' : '-- Choisir un véhicule --'}</option>
+                      {availableVehicles.map(v => (
+                        <option key={v.id} value={v.id}>{v.brand} {v.model} — {v.plate}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 12, fontSize: '0.85rem' }}>
+                  <strong>{isAr ? 'ملخص:' : 'Récapitulatif :'}</strong><br/>
+                  {isAr ? 'تاريخ العطل:' : 'Date panne:'} <strong>{incidentData.incident_date}</strong> —
+                  {isAr ? ' الأيام الفعلية:' : ' Jours réels:'} <strong>{Math.max(1, Math.ceil((new Date(incidentData.incident_date).getTime() - new Date(c.start_date).getTime()) / 86400000))}</strong> —
+                  {isAr ? ' المجموع المعدل:' : ' Total recalculé:'} <strong>{Math.round(Math.max(1, Math.ceil((new Date(incidentData.incident_date).getTime() - new Date(c.start_date).getTime()) / 86400000)) * (c.total_ttc / Math.max(1, Math.ceil((new Date(c.end_date).getTime() - new Date(c.start_date).getTime()) / 86400000))))} MAD</strong>
+                </div>
+              </div>
+            )}
+
+            <div className="modal-footer">
+              {incidentStep === 1 ? (
+                <>
+                  <button className="btn btn-outline" onClick={() => setShowIncidentModal(false)}>{isAr ? 'إلغاء' : 'Annuler'}</button>
+                  <button className="btn btn-primary" onClick={() => setIncidentStep(2)}>
+                    {isAr ? 'التالي ←' : 'Suivant →'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-outline" onClick={() => setIncidentStep(1)}>{isAr ? 'رجوع' : 'Retour'}</button>
+                  <button className="btn bg-orange-500 text-white hover:bg-orange-600"
+                    onClick={handleIncident}
+                    disabled={loadingAction || (incidentData.action === 'change_vehicle' && !incidentData.replacement_vehicle_id)}>
+                    {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                    {isAr ? 'تأكيد' : 'Confirmer'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

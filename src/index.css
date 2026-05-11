@@ -161,12 +161,12 @@ ul { list-style: none; }
    ANIMATIONS
    ========================================== */
 @keyframes fadeInUp {
-  from { opacity:0; transform:translateY(20px); }
-  to   { opacity:1; transform:translateY(0); }
+  from { opacity:0; }
+  to   { opacity:1; }
 }
 @keyframes scaleIn {
-  from { opacity:0; transform:scale(0.94); }
-  to   { opacity:1; transform:scale(1); }
+  from { opacity:0; }
+  to   { opacity:1; }
 }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
@@ -549,7 +549,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: var(--s-4);
 }
 .modal-content {
@@ -775,15 +775,18 @@ body {
 
   .data-table { min-width: 600px; } /* Ensure table doesn't squash too much */
 
-  /* Tab Bar Mobile */
   .tab-bar {
-    width: 100%;
+    width: 100vw;
+    margin-left: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
     overflow-x: auto;
     justify-content: flex-start;
-    padding: 6px;
-    border-radius: var(--r-lg);
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-radius: 0;
   }
-  .tab { padding: 0.5rem 0.85rem; font-size: 0.75rem; }
+  .tab { padding: 0.5rem 0.85rem; font-size: 0.75rem; flex-shrink: 0; white-space: nowrap; }
 
   /* Grid Stack */
   .grid-stack { grid-template-columns: 1fr !important; }

@@ -859,17 +859,19 @@ const VehicleDetail = () => {
                         </div>
                       )}
 
-                      <div className="flex flex-col">
+                      <div className="flex flex-col shrink-0">
                         {d.photo ? (
-                          <button 
-                            className="btn btn-ghost p-2 bg-surface-3 hover:bg-surface-4 rounded-xl flex items-center justify-center text-primary border border-border shadow-sm"
-                            title={isAr ? 'عرض الصورة' : 'Voir la photo'}
+                          <div 
+                            className="w-16 h-16 rounded-xl border border-border shadow-sm cursor-pointer overflow-hidden relative group"
                             onClick={() => setSelectedPhoto(d.photo)}
                           >
-                            <Camera size={22} />
-                          </button>
+                            <img src={d.photo} alt="Damage" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Camera size={18} className="text-white" />
+                            </div>
+                          </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-300 border border-dashed border-gray-200">
+                          <div className="w-16 h-16 rounded-xl bg-surface-3 flex items-center justify-center text-secondary border border-dashed border-border">
                             <Camera size={20} />
                           </div>
                         )}

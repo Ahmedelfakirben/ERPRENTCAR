@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, CarFront, FileText, Users, DollarSign, Flag, Settings as SettingsIcon, Bell, LogOut, Menu, X, CalendarDays, ChevronUp } from 'lucide-react';
+import { LayoutDashboard, CarFront, FileText, Users, DollarSign, Flag, Settings as SettingsIcon, Bell, LogOut, Menu, X, CalendarDays, ChevronUp, Activity } from 'lucide-react';
 import Logo201M from './Logo201M';
 import { supabase } from '../../lib/supabase';
 import { fetchAppNotifications } from '../../lib/notifications';
@@ -66,8 +66,8 @@ const Layout = () => {
       </header>
 
       {/* Overlay only for expanded mobile menu */}
-      {isMobileMenuOpen && !isCollapsed && (
-        <div className="mobile-overlay" onClick={() => { setIsMobileMenuOpen(false); setIsCollapsed(true); }} />
+      {isMobileMenuOpen && (
+        <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
       <aside className={`sidebar ${isMobileMenuOpen ? 'show' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
@@ -117,6 +117,10 @@ const Layout = () => {
           <NavLink to="/finance" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             <div className="sidebar-icon"><DollarSign size={20} /></div>
             <span>{t('sidebar.finance')}</span>
+          </NavLink>
+          <NavLink to="/reports" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            <div className="sidebar-icon"><Activity size={20} /></div>
+            <span>{isAr ? 'التقارير' : 'Bilan & Rapports'}</span>
           </NavLink>
           <NavLink to="/morocco" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
             <div className="sidebar-icon"><Flag size={20} /></div>
