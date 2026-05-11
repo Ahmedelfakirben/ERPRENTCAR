@@ -1,42 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Printer, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import Logo201M from '../components/layout/Logo201M';
 import './ContractPrint.css';
 
 const ContractPrint = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
-  const isAr = i18n.language.startsWith('ar');
   const [loading, setLoading] = useState(true);
   const [contract, setContract] = useState<any>(null);
   const location = useLocation();
   const printTriggered = useRef(false);
 
-  useEffect(() => {
-    fetchContract();
-  }, [id]);
+  useEffect(() => { fetchContract(); }, [id]);
 
   const fetchContract = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('contracts')
-        .select(`
-          *,
-          clients (*),
-          vehicles (*)
-        `)
+        .select('*, clients (*), vehicles (*)')
         .eq('id', id)
         .single();
-      
       if (error) throw error;
       setContract(data);
     } catch (err) {
-      console.error('Error fetching contract for print:', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -45,245 +34,359 @@ const ContractPrint = () => {
   useEffect(() => {
     if (contract && location.search.includes('action=download') && !printTriggered.current) {
       printTriggered.current = true;
-      setTimeout(() => {
-        window.print();
-      }, 600);
+      setTimeout(() => window.print(), 600);
     }
   }, [contract, location]);
 
-  const handlePrint = () => window.print();
-
   if (loading) return <div className="p-24 text-center"><Loader2 className="animate-spin inline-block" /></div>;
-  if (!contract) return <div className="p-24 text-center text-error">Contract not found</div>;
+  if (!contract) return <div className="p-24 text-center">Contrat introuvable</div>;
 
   const c = contract;
   const v = contract.vehicles;
   const cl = contract.clients;
 
+  const Field = ({ label, arLabel, value }: { label: string; arLabel?: string; value?: string | number }) => (
+    <div className="field-group">
+      <label>{label} {arLabel && <span className="ar-lbl">{arLabel}</span>}</label>
+      <span className="field-line">{value || ''}</span>
+    </div>
+  );
+
+  const nDays = c.start_date && c.end_date
+    ? Math.max(1, Math.ceil((new Date(c.end_date).getTime() - new Date(c.start_date).getTime()) / 86400000))
+    : 0;
+  const pricePerDay = nDays > 0 && c.total_ttc ? (c.total_ttc / nDays).toFixed(2) : '';
+
   return (
-    <div className="contract-print-page">
-      {/* Screen-only controls */}
-      <div className="print-controls no-print">
-        <button className="btn btn-ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft size={18} /> {isAr ? 'العودة' : 'Retour'}
+    <div>
+      {/* Screen controls */}
+      <div className="no-print" style={{ display: 'flex', gap: 8, padding: 12, background: '#f5f5f5' }}>
+        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer', background: 'white' }}>
+          <ArrowLeft size={16} /> Retour
         </button>
-        <div className="flex gap-2">
-          <button className="btn btn-outline" onClick={handlePrint}>
-            <Printer size={16} /> {isAr ? 'طباعة' : 'Imprimer'}
-          </button>
-        </div>
+        <button onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          <Printer size={16} /> Imprimer
+        </button>
       </div>
 
-      {/* Printable Content - EXACT DOCX FORMAT */}
-      <div className="print-sheet classic-format">
-        
-        {/* Header */}
-        <div className="classic-header-with-logo" style={{ position: 'relative', display: 'flex', justifyContent: 'center', minHeight: '140px' }}>
-          
-          {/* Absolute Left: Logo & Contract Number */}
-          <div className="header-logo text-center" style={{ position: 'absolute', left: 0, top: 0 }}>
-            <Logo201M size="lg" variant="print" />
-            <div className="contract-num-under-logo font-bold text-lg" style={{ marginTop: '2px' }}>
-              N° {c.contract_number}
-            </div>
-          </div>
-          
-          {/* Centered: Phones & Title */}
-          <div className="header-text" style={{ textAlign: 'center', paddingTop: '5px' }}>
-            <div className="phones" style={{ fontSize: '14pt', fontWeight: 'bold', marginBottom: '8px' }}>
-              06 07 51 94 79 / 06 63 29 93 83
-            </div>
-            <div className="title-section">
-              <h1 style={{ fontSize: '18pt', fontWeight: 'bold', textDecoration: 'underline' }}>CONTRAT DE LOCATION</h1>
-            </div>
-          </div>
+      <div className="talon-page">
 
-          {/* Absolute Right: Date & Location */}
-          <div className="header-date" style={{ position: 'absolute', right: 0, top: '10px', textAlign: 'right' }}>
-            <div style={{ fontSize: '11pt' }}>Tétouan, le:</div>
-            <div className="val-inline" style={{ marginTop: '5px', fontWeight: 'bold' }}>{c.created_at?.split('T')[0]}</div>
+        {/* ── HEADER ── */}
+        <div className="talon-header">
+          <div className="talon-header-left">
+            <div><span className="pin-icon">📍</span> 5 RUE 14 AV MED BENNOUNA QUARTIER BOUJARRAH TETOUAN</div>
+            <div>📞 0660 292 821 / 0531 333 293 / 0618 399 606  –  ICE: 003912377000082</div>
+          </div>
+          <div className="talon-header-right">
+            <img src="/logo.svg" alt="2S1M RENT CAR" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            <div style={{ fontWeight: 'bold', fontSize: '11pt', letterSpacing: 1 }}>2<span style={{ fontSize: '14pt' }}>S</span>1<span style={{ fontSize: '14pt' }}>M</span></div>
+            <div style={{ fontSize: '7pt', letterSpacing: 3 }}>RENT CAR</div>
           </div>
         </div>
 
-        {/* 2 Columns: CONDUCTEUR & VEHICULE */}
-        <div className="classic-grid">
-          
-          {/* CONDUCTEUR COLUMN */}
-          <div className="classic-box col-conducteur">
-            <div className="box-title">CONDUCTEUR / السائق الأول</div>
-            <div className="box-content" style={{ fontSize: '8.5pt', lineHeight: '1' }}>
-              <div className="data-row"><span className="label">PRENOM / الإسم:</span> <span className="value">{cl?.full_name?.split(' ')[0]}</span></div>
-              <div className="data-row"><span className="label">NOM / النسب:</span> <span className="value">{cl?.full_name?.split(' ')[1] || ''}</span></div>
-              <div className="data-row"><span className="label">DATE DE NAISSANCE / تاريخ الازدياد:</span> <span className="value">{cl?.birth_date || ''}</span></div>
-              <div className="data-row"><span className="label">LIEU DE NAISSANCE / مكان الازدياد:</span> <span className="value">{cl?.birth_place || ''}</span></div>
-              <div className="data-row"><span className="label">NATIONALITE / الجنسية:</span> <span className="value">{cl?.nationality || 'Marocaine'}</span></div>
-              <div className="data-row"><span className="label">ADRESSE / العنوان:</span> <span className="value">{cl?.address || ''}</span></div>
-              <div className="data-row"><span className="label">PASSPORT N° / رقم جواز السفر:</span> <span className="value">{cl?.passport || ''}</span></div>
-              <div className="data-row"><span className="label">C.I.N N° / ر.ب.و:</span> <span className="value">{cl?.cin}</span></div>
-              <div className="data-row"><span className="label">TÉL / الهاتف:</span> <span className="value">{cl?.phone}</span></div>
-              <div className="data-row"><span className="label">PERMIS N° / رخصة السياقة:</span> <span className="value">{cl?.driver_license}</span></div>
-              <div className="data-row"><span className="label">DÉLIVRÉ LE / تاريخ الإصدار:</span> <span className="value">{cl?.license_delivery_date || ''}</span></div>
-              <div className="data-row"><span className="label">EXPIRE LE / تاريخ الانتهاء:</span> <span className="value" style={{ color: 'red' }}>{cl?.license_expiry_date || ''}</span></div>
-            </div>
+        {/* Legal text */}
+        <div className="talon-legal-text">
+          <div className="talon-legal-ar" style={{ direction: 'rtl' }}>
+            المكتري يتعهد بإعادة السيارة بعد انتهاء مدة العقد. الشركة 2S1M RENT CAR غير مسؤولة عن أي حادث بعد انتهاء مدة الإضافية.
           </div>
-
-          {/* VEHICULE COLUMN */}
-          <div className="classic-box col-vehicule">
-            <div className="box-title">VEHICULE / السيارة</div>
-            <div className="box-content" style={{ fontSize: '8.5pt', lineHeight: '1' }}>
-              <div className="data-row"><span className="label">MARQUE / العلامة:</span> <span className="value">{v?.brand} {v?.model}</span></div>
-              <div className="data-row"><span className="label">IMMATRICULATION / الترقيم:</span> <span className="value">{v?.plate}</span></div>
-              <div className="data-row"><span className="label">DATE DE DEPART / تاريخ المغادرة:</span> <span className="value">{c.start_date}</span></div>
-              <div className="data-row"><span className="label">HEURE / الساعة:</span> <span className="value">{c.time_out || '10:00'}</span></div>
-              <div className="data-row"><span className="label">DATE DE RETOUR / تاريخ الرجوع:</span> <span className="value">{c.status === 'completed' ? (c.actual_return_date || c.end_date) : c.end_date}</span></div>
-              <div className="data-row"><span className="label">HEURE / الساعة:</span> <span className="value">{c.status === 'completed' ? (c.actual_return_time || c.time_in || '20:00') : (c.time_in || '20:00')}</span></div>
-              <div className="data-row"><span className="label">DATE DE LOCATION / تاريخ الكراء:</span> <span className="value">{c.start_date}</span></div>
-              <div className="data-row"><span className="label">KMS DEPART / عداد الانطلاق:</span> <span className="value">{v?.current_km}</span></div>
-              <div className="data-row"><span className="label">KMS RETOUR / عداد الوصول:</span> <span className="value">{c.km_in || ''}</span></div>
-              <div className="data-row"><span className="label">CARBURANT / الوقود:</span> <span className="value">{v?.fuel}</span></div>
-              <div className="data-row"><span className="label">PROLONGATION / التمديد:</span> <span className="value"></span></div>
-            </div>
+          <div className="talon-legal-fr" style={{ fontSize: '5.5pt' }}>
+            Le locataire s'expose à des poursuites judiciaires 24 heures après la date convenue au départ si le véhicule n'est toujours pas retourné. Le locataire est responsable de tout dégâts d'après la deuxième signature. Le véhicule ne doit être conduit que par le locataire.
           </div>
         </div>
 
-        {/* AUTRE CONDUCTEUR */}
-        <div className="classic-box mt-2">
-           <div className="box-title">AUTRE CONDUCTEUR / السائق الثاني</div>
-            <div className="box-content horizontal-layout" style={{ fontSize: '9pt', padding: '5px' }}>
-              <div className="data-row"><span className="label">PRENOM ET NOM / الإسم والنسب:</span> <span className="value">{c.second_driver_name || ''}</span></div>
-              <div className="data-row"><span className="label">DATE DE NAISSANCE / ADRESSE / تاريخ الازدياد والعنوان:</span> <span className="value">{c.second_driver_birth || ''} {c.second_driver_address ? `- ${c.second_driver_address}` : ''}</span></div>
-              <div className="data-row"><span className="label">PERMIS N° / DÉLIVRÉ LE / رخصة السياقة وتاريخ الإصدار:</span> <span className="value">{c.second_driver_license || ''} {c.second_driver_license_date ? `- ${c.second_driver_license_date}` : ''}</span></div>
-           </div>
+        {/* Title */}
+        <div className="talon-title">
+          <div className="talon-title-ar">عقد كراء السيارات</div>
+          <div className="talon-title-fr">CONTRAT DE LOCATION</div>
         </div>
 
-        {/* ÉTAT DU VÉHICULE */}
-        <div className="classic-box mt-2">
-           <div className="box-title">ÉTAT DU VÉHICULE / حالة السيارة</div>
-           <div className="box-content etat-grid">
-              <div className="etat-col croquis-section">
-                 <div className="croquis-title">Etat général du véhicule lors de la prise en charge / الحالة العامة للسيارة</div>
-                 <div className="croquis-container">
-                    <div className="croquis-av">AV.</div>
-                    <div className="croquis-avant">AVANT</div>
-                    
-                    <div className="croquis-car-svg">
-                       <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-                          {/* Car Body */}
-                          <path d="M 30,25 C 10,25 10,40 10,50 C 10,60 10,75 30,75 L 160,75 C 180,75 190,65 190,50 C 190,35 180,25 160,25 Z" fill="none" stroke="black" strokeWidth="2"/>
-                          {/* Wheels */}
-                          <rect x="35" y="20" width="25" height="5" fill="none" stroke="black" strokeWidth="1.5"/>
-                          <rect x="35" y="75" width="25" height="5" fill="none" stroke="black" strokeWidth="1.5"/>
-                          <rect x="135" y="20" width="25" height="5" fill="none" stroke="black" strokeWidth="1.5"/>
-                          <rect x="135" y="75" width="25" height="5" fill="none" stroke="black" strokeWidth="1.5"/>
-                          {/* Windows/Roof */}
-                          <path d="M 60,30 L 130,30 C 140,30 145,35 145,50 C 145,65 140,70 130,70 L 60,70 C 45,70 40,65 40,50 C 40,35 45,30 60,30 Z" fill="none" stroke="black" strokeWidth="1.5"/>
-                          {/* Details */}
-                          <line x1="45" y1="33" x2="45" y2="67" stroke="black" strokeWidth="1"/>
-                          <line x1="135" y1="33" x2="135" y2="67" stroke="black" strokeWidth="1"/>
-                          <line x1="100" y1="30" x2="100" y2="70" stroke="black" strokeWidth="1"/>
-                          <path d="M 12,40 C 12,40 15,45 15,50 C 15,55 12,60 12,60" fill="none" stroke="black" strokeWidth="1"/>
-                       </svg>
-                    </div>
+        {/* ── VEHICLE INFO TABLE ── */}
+        <table className="t-full vehicle-section" style={{ marginBottom: '2mm' }}>
+          <tbody>
+            <tr>
+              {/* Vehicle fields */}
+              <td style={{ width: '35%', verticalAlign: 'top', padding: '1mm 2mm' }}>
+                <div className="field-group">
+                  <label>N° Immatriculation <span className="ar-lbl">رقم التسجيل</span></label>
+                  <span className="field-line">{v?.plate}</span>
+                </div>
+                <div className="field-group">
+                  <label>Marque <span className="ar-lbl">نوع</span></label>
+                  <span className="field-line">{v?.brand} {v?.model}</span>
+                </div>
+                <div className="field-group">
+                  <label>Lieu de livraison <span className="ar-lbl">مكان التسليم</span></label>
+                  <span className="field-line">{c.pickup_location || 'Tétouan'}</span>
+                </div>
+                <div className="field-group">
+                  <label>Lieu de reprise <span className="ar-lbl">مكان الاسترجاع</span></label>
+                  <span className="field-line">{c.return_location || 'Tétouan'}</span>
+                </div>
+              </td>
 
-                    <div className="croquis-arriere">ARIERE</div>
-                    <div className="croquis-poste">
-                       <div className="poste-title">Poste Auto</div>
-                       <div className="poste-box">NON</div>
-                       <div className="poste-box">OUI</div>
+              {/* IMAH Grid */}
+              <td style={{ width: '25%', padding: 0, verticalAlign: 'top' }}>
+                <div className="imah-grid">
+                  <div className="imah-header">
+                    {['I', 'M', 'A', 'H'].map(l => <span key={l}>{l}</span>)}
+                  </div>
+                  <div className="imah-body">
+                    {['I', 'M', 'A', 'H'].map(l => <div key={l} className="imah-col" />)}
+                  </div>
+                </div>
+              </td>
+
+              {/* Dates */}
+              <td style={{ width: '40%', padding: '1mm 2mm', verticalAlign: 'top' }}>
+                <div className="dates-section">
+                  {[
+                    { fr: 'Départ', ar: 'الإنطلاق', val: `${c.start_date || ''} ${c.time_out || ''}` },
+                    { fr: 'Retour Prévu', ar: 'الرجوع المتوقع', val: `${c.end_date || ''} ${c.time_in || ''}` },
+                    { fr: 'Retour Définitif', ar: 'الرجوع النهائي', val: c.actual_return_date || '' },
+                    { fr: 'Durée', ar: 'المدة', val: nDays > 0 ? `${nDays} jour(s)` : '' },
+                  ].map(row => (
+                    <div className="date-row" key={row.fr}>
+                      <div>
+                        <span className="date-label">{row.fr}</span>
+                        <span className="date-ar"> {row.ar}</span>
+                      </div>
+                      <span className="date-value">{row.val}</span>
                     </div>
-                 </div>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* ── BODY: CLIENT + PRICING ── */}
+        <div className="body-section">
+
+          {/* LEFT: Client */}
+          <div className="col-client">
+            <div className="section-header">
+              <span className="fr-title">Locataire</span>
+              <span className="ar-title">المكتري</span>
+            </div>
+
+            <Field label="Nom et Prénom" arLabel="الإسم العائلي والشخصي" value={cl?.full_name} />
+            <Field label="Adresse au Maroc" arLabel="العنوان بالمغرب" value={cl?.address} />
+            <Field label="Date de Naissance" arLabel="تاريخ الإزدياد" value={cl?.birth_date} />
+            <Field label="Permis de Conduire N°" arLabel="رخصة السياقة" value={cl?.driver_license} />
+            <Field label="Délivré le" arLabel="صادرة في" value={cl?.license_delivery_date} />
+            <Field label="C.I.N ou Passeport N°" arLabel="رقم البطاقة الوطنية أو جواز السفر" value={cl?.cin || cl?.passport} />
+            <Field label="Adresse à l'étranger" arLabel="العنوان بالخارج" value={cl?.foreign_address} />
+            <Field label="Tél/" value={cl?.phone} />
+
+            {/* 2ème Conducteur */}
+            <div className="sub-header">
+              <span>السائق الثاني</span>
+              <span>2<sup>ème</sup> Conducteur</span>
+            </div>
+            <Field label="Nom et Prénom" arLabel="الإسم العائلي والشخصي" value={c.second_driver_name} />
+            <Field label="Adresse au Maroc" arLabel="العنوان بالمغرب" value={c.second_driver_address} />
+            <Field label="Permis de Conduire N°" arLabel="رخصة السياقة" value={c.second_driver_license} />
+            <Field label="C.I.N N°" value={c.second_driver_cin} />
+
+            {/* Fuel Gauge */}
+            <div className="fuel-section">
+              <div>
+                <div className="fuel-label">Tau de Carburant</div>
+                <div className="fuel-label ar">نسبة البنزين</div>
               </div>
-              <div className="etat-col pl-4">
-                 <div className="data-row font-bold mb-2">NIVEAU CARBURANT / مستوى الوقود:</div>
-                 <div className="fuel-gauge-modern">
-                    <div className={`fuel-segment ${c.fuel_level_out === 'empty' ? 'active' : ''}`}><span>E</span></div>
-                    <div className={`fuel-segment ${c.fuel_level_out === '1/4' ? 'active' : ''}`}><span>1/4</span></div>
-                    <div className={`fuel-segment ${c.fuel_level_out === '1/2' ? 'active' : ''}`}><span>1/2</span></div>
-                    <div className={`fuel-segment ${c.fuel_level_out === '3/4' ? 'active' : ''}`}><span>3/4</span></div>
-                    <div className={`fuel-segment ${c.fuel_level_out === 'full' ? 'active' : ''}`}><span>F</span></div>
-                 </div>
-                 
-                 <div className="tools-grid-modern mt-6">
-                    <div className="tool-item">
-                       <span className="label">ROUE DE SECOURS / عجلة احتياطية</span>
-                       <div className="fancy-checkbox">{c.check_out_spare_tire ? '✓' : ''}</div>
-                    </div>
-                    <div className="tool-item">
-                       <span className="label">CLEF DE ROUE / مفتاح العجلات</span>
-                       <div className="fancy-checkbox">{c.check_out_wheel_wrench ? '✓' : ''}</div>
-                    </div>
-                    <div className="tool-item">
-                       <span className="label">CRIC / رافعة</span>
-                       <div className="fancy-checkbox">{c.check_out_jack ? '✓' : ''}</div>
-                    </div>
-                    <div className="tool-item">
-                       <span className="label">TRIANGLE / مثلث العطب</span>
-                       <div className="fancy-checkbox">{c.check_out_triangle ? '✓' : ''}</div>
-                    </div>
-                 </div>
+              <img src="/fuel_gauge.jpeg" alt="Carburant" className="fuel-img"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div style={{ fontSize: '8pt', fontWeight: 'bold' }}>
+                {c.fuel_level_out || '1/2'}
               </div>
-           </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Pricing */}
+          <div className="col-pricing">
+            <table className="pricing-table">
+              <thead>
+                <tr>
+                  <th className="row-label"></th>
+                  <th>العدد<br/>Q</th>
+                  <th>الثمن<br/>Prix</th>
+                  <th>Prix Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="row-label">ثمن الكراء في اليوم<br/><span style={{fontSize:'6pt'}}>Heures</span></td>
+                  <td></td>
+                  <td></td>
+                  <td style={{textAlign:'right'}}>...................DH</td>
+                </tr>
+                <tr>
+                  <td className="row-label">الأيام<br/><span style={{fontSize:'6pt'}}>Jours</span></td>
+                  <td style={{fontWeight:'bold'}}>{nDays || ''}</td>
+                  <td style={{fontWeight:'bold'}}>{pricePerDay}</td>
+                  <td style={{textAlign:'right', fontWeight:'bold'}}>{c.total_ttc ? `${c.total_ttc} DH` : '...................DH'}</td>
+                </tr>
+                <tr>
+                  <td className="row-label">الأسابيع<br/><span style={{fontSize:'6pt'}}>Semaines</span></td>
+                  <td></td>
+                  <td></td>
+                  <td style={{textAlign:'right'}}>...................DH</td>
+                </tr>
+                <tr>
+                  <td className="row-label">الشهور<br/><span style={{fontSize:'6pt'}}>Mois</span></td>
+                  <td></td>
+                  <td></td>
+                  <td style={{textAlign:'right'}}>...................DH</td>
+                </tr>
+                <tr>
+                  <td className="row-label">مع التأمين<br/><span style={{fontSize:'6pt'}}>avec Assurance</span></td>
+                  <td></td>
+                  <td></td>
+                  <td style={{textAlign:'right'}}>...................DH</td>
+                </tr>
+                <tr className="total-row">
+                  <td colSpan={3} style={{textAlign:'right', fontWeight:'bold'}}>المجموع<br/>Total</td>
+                  <td style={{textAlign:'right', fontWeight:'bold'}}>{c.total_ttc ? `${c.total_ttc} DH` : '...................DH'}</td>
+                </tr>
+                <tr className="supplement-row">
+                  <td colSpan={3} style={{textAlign:'right', color:'#c00'}}>زيادة<br/>Suplément</td>
+                  <td style={{textAlign:'right', color:'#c00'}}>...................DH</td>
+                </tr>
+                <tr className="grand-total-row">
+                  <td colSpan={3} style={{textAlign:'right', fontWeight:'bold'}}>Total Général<br/><span style={{fontSize:'6pt'}}>(au Retour)</span></td>
+                  <td style={{textAlign:'right', fontWeight:'bold'}}>...................DH</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Payment */}
+            <div className="payment-section">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3mm', marginBottom: '1mm' }}>
+                <span className="payment-label">Paiement:</span>
+                <div className="payment-row" style={{ flex: 1 }}>
+                  <div className="checkbox-sq">{c.payment_method === 'cash' ? '✓' : ''}</div>
+                  <span style={{ color: '#c00', fontWeight: 'bold', fontStyle: 'italic' }}>Espèce</span>
+                </div>
+              </div>
+              <div className="payment-row">
+                <div style={{ width: '20mm' }}></div>
+                <div className="checkbox-sq">{c.payment_method === 'cheque' ? '✓' : ''}</div>
+                <span>Chèque</span>
+              </div>
+
+              <div style={{ marginTop: '2mm', borderTop: '0.5pt solid #000', paddingTop: '1mm' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '1mm' }}>ضمانة<br/>Caution:</div>
+                <div style={{ borderBottom: '0.5pt solid #000', minHeight: '8mm' }}></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* LEGAL NOTE */}
-        <div className="classic-disclaimer mt-2" style={{ border: '1px solid #000', padding: '6px', fontSize: '7pt', lineHeight: '1.2' }}>
-           <div className="flex gap-4">
-              <div style={{ flex: 1, borderRight: '1px solid #000', paddingRight: '10px' }}>
-                 <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>NOTE IMPORTANTE:</p>
-                 <p>Le Locataire s'expose à des poursuites judiciaires 24 Heures aprés la date convenue au départ si le véhicule n'est toujours pas retourné, et cela sons que 2S1M RENT CAR ait été informé d'un prolongation de location et ait reçu la somme suplémentaire dûe. En cas de fortuit locataire est responsable de tous dégâts d'aprés la deuxième signature. Le véhicule ne doit être conduit que par le locataire.</p>
+        {/* ── DAMAGE SECTION ── */}
+        <div className="damage-section">
+
+          {/* DEPART */}
+          <div className="damage-col">
+            <div className="dep-ret-header">
+              <span className="dep-arrow">←</span>
+              <span>DEPART</span>
+            </div>
+            <div style={{ fontSize: '6.5pt', marginBottom: '1mm' }}>
+              <strong>Véhicule en état parfait</strong><br/>
+              <span style={{ color: '#999' }}>(Rayer la mention inutile)</span>
+            </div>
+            <div className="oui-non">
+              <div className="oui-non-sq"></div><span>OUI</span>
+              <div className="oui-non-sq"></div><span>NON</span>
+            </div>
+            <div style={{ fontSize: '6.5pt', marginBottom: '1mm' }}>
+              Positionner les numéros à l'endroit précis du <u>dommage</u>, sur la matrice à gauche
+            </div>
+            <div className="car-diagram">
+              <img src="/car_damage_map.png" alt="Car" className="car-img"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="car-numbers">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <span key={n}><div className="num-box">{n}</div><div style={{ borderBottom: '0.3pt solid #aaa', width: '20mm' }} /></span>
+                ))}
               </div>
-              <div style={{ flex: 1, textAlign: 'right', direction: 'rtl' }}>
-                 <p style={{ fontWeight: 'bold', marginBottom: '5px' }}>ملاحظة هامة:</p>
-                 <p>يتعرض المستأجر للملاحقة القضائية بعد مرور 24 ساعة من التاريخ المتفق عليه إذا لم يتم إرجاع السيارة، وذلك ما لم يتم إبلاغ شركة 2S1M RENT CAR بتمديد الإيجار ودفع المبلغ الإضافي المستحق. في حالة وقوع حادث عرضي، يكون المستأجر مسؤولاً عن جميع الأضرار بعد التوقيع الثاني. لا يجب قيادة السيارة إلا من طرف المستأجر.</p>
+            </div>
+            <div className="commentaires" style={{ fontSize: '6.5pt', marginTop: '1mm' }}>
+              <strong>Commentaires:</strong>
+              {[1, 2, 3].map(n => <div key={n} className="comment-line" />)}
+            </div>
+          </div>
+
+          {/* CENTER: Dommages */}
+          <div className="damage-col-center">
+            <div style={{ fontWeight: 'bold', fontSize: '7pt', textAlign: 'center', borderBottom: '0.5pt solid #000', paddingBottom: '1mm', marginBottom: '2mm' }}>
+              Dommages identifiés<br/>et acceptés
+            </div>
+            <div className="damage-types">
+              {['Erafflure', 'Bosse', 'Manque'].map(d => (
+                <div className="damage-type-item" key={d}>
+                  <div className="damage-check"></div>
+                  <span>{d}</span>
+                </div>
+              ))}
+            </div>
+            <table className="damage-grid">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Paraphe Client</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4].map(n => (
+                  <tr key={n}>
+                    <td style={{ height: '5mm' }}></td>
+                    <td></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* RETOUR */}
+          <div className="damage-col">
+            <div className="dep-ret-header">
+              <span>RETOUR</span>
+              <span className="dep-arrow">→</span>
+            </div>
+            <div style={{ fontSize: '6.5pt', marginBottom: '1mm' }}>
+              <strong>Véhicule en état parfait</strong><br/>
+              <span style={{ color: '#999' }}>(Rayer la mention inutile)</span>
+            </div>
+            <div className="oui-non">
+              <div className="oui-non-sq"></div><span>OUI</span>
+              <div className="oui-non-sq"></div><span>NON</span>
+            </div>
+            <div style={{ fontSize: '6.5pt', marginBottom: '1mm' }}>
+              Positionner les numéros à l'endroit précis du <u>dommage</u>, sur la matrice à gauche
+            </div>
+            <div className="car-diagram">
+              <img src="/car_damage_map.png" alt="Car" className="car-img"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="car-numbers">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <span key={n}><div className="num-box">{n}</div><div style={{ borderBottom: '0.3pt solid #aaa', width: '20mm' }} /></span>
+                ))}
               </div>
-           </div>
+            </div>
+            <div className="commentaires" style={{ fontSize: '6.5pt', marginTop: '1mm' }}>
+              <strong>Commentaires:</strong>
+              {[1, 2, 3].map(n => <div key={n} className="comment-line" />)}
+            </div>
+          </div>
         </div>
 
-        {/* OLD DISCLAIMER (OPTIONAL - REMOVING TO AVOID CLUTTER) */}
-
-        {/* FINANCIALS & SIGNATURE */}
-        <div className="classic-footer-grid mt-2">
-           <div className="financials">
-              <div className="data-row"><span className="label">AVANCE / التسبيق:</span> <span className="value">{c.total_ttc?.toLocaleString()} MAD</span></div>
-              <div className="data-row"><span className="label">RESTE A PAYER / الباقي:</span> <span className="value">0.00 MAD</span></div>
-           </div>
-           <div className="signatures-group" style={{ display: 'flex', justifyContent: 'space-between', gap: '40px' }}>
-              <div className="signatures" style={{ flex: 1 }}>
-                 <div className="sig-title" style={{ fontSize: '9pt' }}>Signature Client / توقيع الزبون</div>
-                 <div className="sig-box" style={{ height: '50px', border: '1px solid #eee', marginTop: '5px' }}></div>
-              </div>
-              <div className="signatures" style={{ flex: 1 }}>
-                 <div className="sig-title" style={{ fontSize: '9pt' }}>Signature Entreprise / توقيع الشركة</div>
-                 <div className="sig-box" style={{ height: '50px', border: '1px solid #eee', marginTop: '5px' }}></div>
-              </div>
-           </div>
+        {/* ── SIGNATURES ── */}
+        <div className="sig-row">
+          <div className="sig-box">Signature Client</div>
+          <div className="sig-box">VISA<br/>2S1M RENT CAR</div>
         </div>
 
-        {/* BOTTOM FOOTER */}
-        <div className="classic-bottom-footer mt-10" style={{ borderTop: '1px solid #000', paddingTop: '5px', textAlign: 'center', fontSize: '9pt' }}>
-           <p style={{ fontWeight: 'bold' }}>5 RUE 14 AV MED BENNOUNA QUARTIER BOUJARRAH TETOUAN</p>
-           <p>0660 292 821 / 0531 333 293 / 0618 399 606  -  ICE: 003912377000082</p>
-        </div>
-      </div>
-
-      {/* Second Page: Terms & Conditions (Static Image) */}
-      <div className="print-sheet conditions-page" style={{ 
-        pageBreakBefore: 'always', 
-        padding: '10px',
-        textAlign: 'center',
-        backgroundColor: '#fff'
-      }}>
-        <img 
-          src="/condiciones.jpg" 
-          alt="Conditions" 
-          style={{ 
-            width: '100%', 
-            height: 'auto', 
-            maxHeight: '1000px', 
-            margin: '0 auto',
-            display: 'block' 
-          }} 
-        />
       </div>
     </div>
   );
