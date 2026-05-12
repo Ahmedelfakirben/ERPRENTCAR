@@ -50,3 +50,41 @@
 .row-blacklisted:hover {
   background-color: rgba(239, 68, 68, 0.08) !important;
 }
+
+/* Document Upload Styles */
+.document-upload-box {
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3);
+  border: 1px solid var(--border);
+}
+
+.upload-preview-square {
+  width: 100%;
+  aspect-ratio: 1.6 / 1; /* Aspect ratio similar to ID cards */
+  background: var(--surface-3);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  transition: all var(--t-fast);
+}
+
+.upload-preview-square.has-image {
+  border-style: solid;
+  border-color: var(--primary);
+}
+
+.upload-preview-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-preview-square:hover {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
+}

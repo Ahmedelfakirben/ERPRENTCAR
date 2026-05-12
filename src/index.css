@@ -806,3 +806,228 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--s-4);
 }
+
+/* ==========================================
+   GANTT BAR HOVER EFFECT
+   ========================================== */
+.gantt-bar-hover:hover {
+  filter: brightness(1.15) !important;
+  transform: translateY(-50%) scaleY(1.08) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+}
+
+/* ==========================================
+   APP SHELL — MOBILE RESPONSIVE LAYOUT
+   ========================================== */
+
+/* The main app wrapper (sidebar + content) */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Content area scrolls independently */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Sidebar collapses on mobile — handled by Layout.css ── */
+@media (max-width: 768px) {
+  /* All page containers: reduce padding */
+  .contracts-page,
+  .fleet-page,
+  .clients-page,
+  .finance-page,
+  .morocco-page,
+  .dashboard-page,
+  .settings-page,
+  .planning-page {
+    padding: 1rem !important;
+    padding-bottom: 100px !important;
+  }
+
+  /* ── Header ── */
+  .page-header,
+  .clients-header,
+  .fleet-header,
+  .contracts-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .page-header h1,
+  .clients-header h1 {
+    font-size: 1.4rem !important;
+  }
+
+  /* ── Filter bars stack vertically ── */
+  .clients-filter-bar,
+  .fleet-filter-bar,
+  .contracts-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .clients-filter-bar > *,
+  .fleet-filter-bar > *,
+  .contracts-filter-bar > * {
+    width: 100% !important;
+  }
+
+  /* ── Tables: horizontal scroll ── */
+  .table-container,
+  .table-responsive,
+  .card > .data-table,
+  .card > table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  .data-table th, .data-table td {
+    padding: 0.65rem 0.6rem !important;
+    font-size: 0.73rem !important;
+  }
+
+  /* ── Cards and Grids ── */
+  .card {
+    border-radius: var(--r-md) !important;
+  }
+
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI grid: 2 cols on mobile */
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Modals ── */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
+    padding: 1.25rem !important;
+    margin: 0 !important;
+    max-height: 92vh !important;
+    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards !important;
+  }
+
+  .modal-header {
+    margin: -1.25rem -1.25rem 1rem !important;
+    padding: 1rem 1.25rem !important;
+  }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    padding: 4px !important;
+    border-radius: var(--r-lg) !important;
+  }
+
+  .tab {
+    font-size: 0.78rem !important;
+    padding: 0.4rem 0.85rem !important;
+    flex-shrink: 0;
+  }
+
+  /* ── Client detail ── */
+  .client-hero {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    padding: 1.25rem !important;
+  }
+
+  .client-hero-stats {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-start;
+  }
+
+  .client-overview-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Documents grid ── */
+  .docs-upload-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Document photo sides: full width on tiny screens ── */
+  @media (max-width: 480px) {
+    [style*="gridTemplateColumns: '1fr 1fr'"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* ── Page actions FAB ── */
+  .page-actions {
+    bottom: 90px !important;
+    right: 1rem !important;
+    flex-direction: column-reverse !important;
+    gap: 0.5rem !important;
+  }
+
+  [dir='rtl'] .page-actions {
+    left: 1rem !important;
+    right: auto !important;
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.2rem !important; }
+  h3 { font-size: 1rem !important; }
+
+  /* ── Buttons: touch-friendly ── */
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 34px; }
+
+  /* ── Input fields: larger tap targets ── */
+  .input-field, .input-select {
+    min-height: 44px !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* Slide-up animation for bottom sheets (modal on mobile) */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Utility classes for responsive behavior ── */
+.mobile-only  { display: none; }
+.desktop-only { display: block; }
+
+@media (max-width: 768px) {
+  .mobile-only  { display: block; }
+  .desktop-only { display: none; }
+  .mobile-flex  { display: flex !important; }
+  .mobile-hide  { display: none !important; }
+  .mobile-w-full { width: 100% !important; }
+  .mobile-text-sm { font-size: 0.8rem !important; }
+  .mobile-p-sm  { padding: 0.75rem !important; }
+  .mobile-col   { flex-direction: column !important; }
+}

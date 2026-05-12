@@ -90,31 +90,28 @@ const VehicleDetail = () => {
       const { error: maintError } = await supabase.from('maintenance').insert([payload]);
       if (maintError) throw maintError;
 
-      // 2. Insert into transactions table as an expense to centralize costs
-      const { error: txError } = await supabase.from('transactions').insert([{
+      // 2. Update vehicle KM and next maintenance alert
+      await supabase.from('vehicles').update({ 
+        current_km: maintData.km_at_service,
+        next_maintenance_km: maintData.next_due_km > 0 ? maintData.next_due_km : null
+      }).eq('id', id);
+
+      // 3. Insert into transactions table as an expense
+      await supabase.from('transactions').insert([{
         transaction_type: 'expense',
-        category: 'Réparations',
-        description: `${maintenanceLabels[lang][maintData.maintenance_type]}: ${maintData.description}`,
+        category: 'Maintenance',
+        description: `Entretien (${maintData.maintenance_type}): ${maintData.description}`,
         amount: maintData.cost,
         transaction_date: performedAt,
         vehicle_id: id,
-        payment_method: 'cash'
+        status: 'completed'
       }]);
-      if (txError) throw txError;
-
-      // Update vehicle current_km if maintenance km is higher
-      if (maintData.km_at_service > (vehicle.current_km || 0)) {
-        await supabase
-          .from('vehicles')
-          .update({ current_km: maintData.km_at_service })
-          .eq('id', id);
-      }
 
       setShowAddMaintenance(false);
       fetchAllData();
     } catch (err) {
-      console.error(err);
-      alert('Error adding maintenance');
+      console.error('Error adding maintenance:', err);
+      alert('Error saving maintenance. Please check console.');
     }
   };
 
@@ -334,6 +331,18 @@ const VehicleDetail = () => {
               <div className="hero-stat"><Fuel size={15} /><span>{v.fuel}</span></div>
               <div className="hero-stat"><Gauge size={15} /><span>{(v.current_km || 0).toLocaleString()} km</span></div>
               <div className="hero-stat"><Settings2 size={15} /><span>{v.transmission}</span></div>
+              
+              {v.next_maintenance_km && (
+                <div className={`hero-stat ${v.current_km >= v.next_maintenance_km ? 'text-error animate-pulse font-bold' : (v.next_maintenance_km - v.current_km < 1000 ? 'text-warning font-bold' : 'text-success')}`}>
+                  <Wrench size={15} />
+                  <span>
+                    {v.current_km >= v.next_maintenance_km 
+                      ? (isAr ? 'صيانة فورية!' : 'Entretien Urgent!') 
+                      : (isAr ? `صيانة بعد ${v.next_maintenance_km - v.current_km} كم` : `Entretien dans ${v.next_maintenance_km - v.current_km} km`)}
+                  </span>
+                </div>
+              )}
+
               <div className="hero-stat hero-rate">
                 <span className="text-primary font-bold" style={{ fontSize: '1rem' }}>{v.daily_rate} MAD</span>
                 <small>/{isAr ? 'يوم' : 'jour'}</small>

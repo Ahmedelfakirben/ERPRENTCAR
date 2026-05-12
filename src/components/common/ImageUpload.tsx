@@ -3,13 +3,15 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface ImageUploadProps {
-  bucket: 'vehicles' | 'documents' | 'clients';
+  bucket: 'vehicles' | 'documents' | 'clients' | 'temp';
   onUploadComplete: (url: string) => void;
   label?: string;
   currentImage?: string;
+  useCamera?: boolean;
+  className?: string;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ bucket, onUploadComplete, label, currentImage }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ bucket, onUploadComplete, label, currentImage, useCamera, className }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +57,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ bucket, onUploadComplete, lab
   return (
     <div className="input-group">
       {label && <label className="input-label">{label}</label>}
-      <div className="image-upload-container">
+      <div className={`image-upload-container ${className || ''}`}>
         {preview ? (
           <div className="image-preview-wrapper card">
             <img src={preview} alt="Upload preview" className="image-preview" />
@@ -73,7 +75,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ bucket, onUploadComplete, lab
             ) : (
               <>
                 <Upload size={24} className="text-secondary mb-2" />
-                <span className="text-xs text-secondary">Cliquez pour slectionner</span>
+                <span className="text-xs text-secondary">Cliquez pour sélectionner</span>
               </>
             )}
           </div>
@@ -83,6 +85,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ bucket, onUploadComplete, lab
           ref={fileInputRef}
           onChange={handleUpload}
           accept="image/*"
+          capture={useCamera ? "environment" : undefined}
           className="hidden"
           style={{ display: 'none' }}
         />

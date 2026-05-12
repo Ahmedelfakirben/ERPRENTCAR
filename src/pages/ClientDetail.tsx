@@ -308,36 +308,143 @@ const ClientDetail = () => {
 
         {/* Documents */}
         {tab === 'documents' && (
-          <div className="docs-upload-grid animate-fade-in">
-            <div className="card doc-upload-card" style={{ padding: 'var(--spacing-6)' }}>
-              <ImageUpload 
-                bucket="documents" 
-                label={isAr ? 'نسخة بطاقة الهوية (CIN)' : 'Copie CIN'} 
-                currentImage={c.cin_scan_url}
-                onUploadComplete={(url) => handleUpdateDocument(url, 'cin_scan_url')}
-              />
-              <p className="text-xs text-secondary mt-2">CIN: {c.cin}</p>
-            </div>
+          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
-            <div className="card doc-upload-card" style={{ padding: 'var(--spacing-6)' }}>
-              <ImageUpload 
-                bucket="documents" 
-                label={isAr ? 'نسخة رخصة القيادة' : 'Permis de Conduire'} 
-                currentImage={c.license_scan_url}
-                onUploadComplete={(url) => handleUpdateDocument(url, 'license_scan_url')}
-              />
-              <p className="text-xs text-secondary mt-2">Permis: {c.driver_license}</p>
+            {/* CIN */}
+            <div className="card" style={{ padding: 'var(--spacing-6)' }}>
+              <h3 className="mb-4 flex items-center gap-2">
+                <CreditCard size={18} className="text-primary" />
+                {isAr ? 'بطاقة الهوية (CIN)' : 'Carte d\'Identité Nationale (CIN)'}
+                <span className="font-mono text-primary ml-auto">{c.cin || '—'}</span>
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* CIN Front */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Recto (Front)</p>
+                  {c.cin_front ? (
+                    <a href={c.cin_front} target="_blank" rel="noopener noreferrer">
+                      <img src={c.cin_front} alt="CIN Front" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <CreditCard size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'cin_front')} />
+                  </div>
+                </div>
+                {/* CIN Back */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Verso (Back)</p>
+                  {c.cin_back ? (
+                    <a href={c.cin_back} target="_blank" rel="noopener noreferrer">
+                      <img src={c.cin_back} alt="CIN Back" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <CreditCard size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'cin_back')} />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="card doc-upload-card" style={{ padding: 'var(--spacing-6)' }}>
-              <ImageUpload 
-                bucket="documents" 
-                label={isAr ? 'نسخة جواز السفر' : 'Passeport'} 
-                currentImage={c.passport_image_url}
-                onUploadComplete={(url) => handleUpdateDocument(url, 'passport_image_url')}
-              />
-              <p className="text-xs text-secondary mt-2">Passeport: {c.passport || '—'}</p>
+            {/* Permis de Conduire */}
+            <div className="card" style={{ padding: 'var(--spacing-6)' }}>
+              <h3 className="mb-4 flex items-center gap-2">
+                <Shield size={18} className="text-primary" />
+                {isAr ? 'رخصة السياقة' : 'Permis de Conduire'}
+                <span className="font-mono text-primary ml-auto">{c.driver_license || '—'}</span>
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* License Front */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Recto (Front)</p>
+                  {c.license_front ? (
+                    <a href={c.license_front} target="_blank" rel="noopener noreferrer">
+                      <img src={c.license_front} alt="License Front" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <Shield size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'license_front')} />
+                  </div>
+                </div>
+                {/* License Back */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Verso (Back)</p>
+                  {c.license_back ? (
+                    <a href={c.license_back} target="_blank" rel="noopener noreferrer">
+                      <img src={c.license_back} alt="License Back" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <Shield size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'license_back')} />
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Passeport */}
+            <div className="card" style={{ padding: 'var(--spacing-6)' }}>
+              <h3 className="mb-4 flex items-center gap-2">
+                <FileText size={18} className="text-primary" />
+                {isAr ? 'جواز السفر' : 'Passeport'}
+                <span className="font-mono text-primary ml-auto">{c.passport || '—'}</span>
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* Passport Front */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Recto (Front)</p>
+                  {c.passport_front ? (
+                    <a href={c.passport_front} target="_blank" rel="noopener noreferrer">
+                      <img src={c.passport_front} alt="Passport Front" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <FileText size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'passport_front')} />
+                  </div>
+                </div>
+                {/* Passport Back */}
+                <div>
+                  <p className="text-xs text-secondary mb-2 font-semibold uppercase">Verso (Back)</p>
+                  {c.passport_back ? (
+                    <a href={c.passport_back} target="_blank" rel="noopener noreferrer">
+                      <img src={c.passport_back} alt="Passport Back" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '3/2', cursor: 'zoom-in' }} />
+                    </a>
+                  ) : (
+                    <div style={{ width: '100%', aspectRatio: '3/2', borderRadius: '8px', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-secondary)', fontSize: '12px', gap: '8px' }}>
+                      <FileText size={24} style={{ opacity: 0.3 }} />
+                      {isAr ? 'لم يتم التحميل' : 'Non chargé'}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => handleUpdateDocument(url, 'passport_back')} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </div>

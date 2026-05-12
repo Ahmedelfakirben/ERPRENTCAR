@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Eye, History, Loader2, X, User, Phone, Mail, CreditCard, Award, Download } from 'lucide-react';
+import { Plus, Search, Eye, History, Loader2, X, User, Phone, Mail, CreditCard, Award, Download, Camera } from 'lucide-react';
+import { scanDocument } from '../lib/ocr';
 import { supabase } from '../lib/supabase';
 import { exportToCSV } from '../utils/exportUtils';
+import ImageUpload from '../components/common/ImageUpload';
 import './Clients.css';
 
 
@@ -16,6 +18,7 @@ const Clients = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -32,7 +35,13 @@ const Clients = () => {
     birth_place: '',
     nationality: 'Marocaine',
     address: '',
-    license_expiry_date: ''
+    license_expiry_date: '',
+    cin_front: '',
+    cin_back: '',
+    license_front: '',
+    license_back: '',
+    passport_front: '',
+    passport_back: ''
   });
 
   useEffect(() => {
@@ -56,6 +65,63 @@ const Clients = () => {
     }
   };
 
+  const handleGlobalOCR = async () => {
+    // Collect all uploaded images
+    const urls = [
+      formData.cin_front, formData.cin_back,
+      formData.license_front, formData.license_back,
+      formData.passport_front, formData.passport_back
+    ].filter(u => u);
+
+    if (urls.length === 0) {
+      alert(isAr ? 'الرجاء تحميل صورة واحدة على الأقل' : 'Veuillez télécharger au moins une image');
+      return;
+    }
+
+    setIsScanning(true);
+    try {
+      const result = await scanDocument(urls);
+      console.log('Processed Global OCR Result:', result);
+      
+      if (result) {
+        setFormData(prev => {
+          const newState = { ...prev };
+          
+          if (result.cin) newState.cin = result.cin;
+          if (result.birth_date) newState.birth_date = result.birth_date;
+          if (result.address) newState.address = result.address;
+          if (result.driver_license) newState.driver_license = result.driver_license;
+          if (result.license_delivery_date) newState.license_delivery_date = result.license_delivery_date;
+          if (result.passport) newState.passport = result.passport;
+          
+          if (result.full_name) {
+            const nameParts = result.full_name.trim().split(/\s+/);
+            if (nameParts.length >= 2) {
+              newState.first_name = nameParts[0];
+              newState.last_name = nameParts.slice(1).join(' ');
+            } else {
+              newState.first_name = result.full_name;
+            }
+          }
+          
+          return newState;
+        });
+
+        // Show success alert and scroll to top for review
+        alert(isAr ? 'تم استخراج البيانات بنجاح! يرجى المراجعة.' : 'Données extraites avec succès ! Veuillez vérifier.');
+        const modal = document.querySelector('.modal-content');
+        if (modal) {
+          modal.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    } catch (err) {
+      console.error('OCR Error:', err);
+      alert(isAr ? 'فشل المسح الضوئي للذكاء الاصطناعي' : 'Échec du scan IA');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
   const handleAddClient = async () => {
     try {
       const payload = {
@@ -76,7 +142,8 @@ const Clients = () => {
         first_name: '', last_name: '', full_name_ar: '', phone: '', email: '',
         cin: '', passport: '', driver_license: '', license_delivery_date: '',
         birth_date: '', birth_place: '', nationality: 'Marocaine', address: '',
-        license_expiry_date: ''
+        license_expiry_date: '', cin_front: '', cin_back: '', license_front: '', license_back: '',
+        passport_front: '', passport_back: ''
       });
       fetchClients();
     } catch (err) {
@@ -334,6 +401,131 @@ const Clients = () => {
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
                   />
+                </div>
+              </div>
+
+              {/* Document Photos Section */}
+              <div className="mt-8 pt-6 border-t border-dashed">
+                <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                  <Camera size={16} className="text-primary" />
+                  {isAr ? 'صور الوثائق (وجهين)' : 'Photos des Documents (Recto/Verso)'}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* CIN Photos */}
+                  <div className="p-4 bg-surface-2 rounded-xl border border-border">
+                    <label className="text-xs font-bold text-secondary uppercase mb-3 block">CIN / Carte National</label>
+                    <div className="flex gap-4">
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Recto (Front)</span>
+                        <div className={`upload-preview-square ${formData.cin_front ? 'has-image' : ''}`}>
+                          {formData.cin_front ? (
+                            <img src={formData.cin_front} alt="CIN Front" />
+                          ) : (
+                            <div className="flex flex-col items-center">
+                               {isScanning ? <Loader2 className="animate-spin text-primary" /> : <Plus size={20} />}
+                            </div>
+                          )}
+                          <ImageUpload 
+                            bucket="clients" 
+                            useCamera={true}
+                            onUploadComplete={(url) => {
+                              setFormData({...formData, cin_front: url});
+                            }} 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Verso (Back)</span>
+                        <div className={`upload-preview-square ${formData.cin_back ? 'has-image' : ''}`}>
+                          {formData.cin_back ? (
+                            <img src={formData.cin_back} alt="CIN Back" />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                          <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => setFormData({...formData, cin_back: url})} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* License Photos */}
+                  <div className="p-4 bg-surface-2 rounded-xl border border-border">
+                    <label className="text-xs font-bold text-secondary uppercase mb-3 block">{isAr ? 'رخصة السياقة' : 'Permis de Conduire'}</label>
+                    <div className="flex gap-4">
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Recto (Front)</span>
+                        <div className={`upload-preview-square ${formData.license_front ? 'has-image' : ''}`}>
+                          {formData.license_front ? (
+                            <img src={formData.license_front} alt="License Front" />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                          <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => setFormData({...formData, license_front: url})} />
+                        </div>
+                      </div>
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Verso (Back)</span>
+                        <div className={`upload-preview-square ${formData.license_back ? 'has-image' : ''}`}>
+                          {formData.license_back ? (
+                            <img src={formData.license_back} alt="License Back" />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                          <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => setFormData({...formData, license_back: url})} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Passport Photos */}
+                  <div className="p-4 bg-surface-2 rounded-xl border border-border">
+                    <label className="text-xs font-bold text-secondary uppercase mb-3 block">{isAr ? 'جواز السفر' : 'Passeport'}</label>
+                    <div className="flex gap-4">
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Recto (Front)</span>
+                        <div className={`upload-preview-square ${formData.passport_front ? 'has-image' : ''}`}>
+                          {formData.passport_front ? (
+                            <img src={formData.passport_front} alt="Passport Front" />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                          <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => setFormData({...formData, passport_front: url})} />
+                        </div>
+                      </div>
+                      <div className="document-upload-box relative flex-1">
+                        <span className="text-[10px] text-center mb-1 block">Verso (Back)</span>
+                        <div className={`upload-preview-square ${formData.passport_back ? 'has-image' : ''}`}>
+                          {formData.passport_back ? (
+                            <img src={formData.passport_back} alt="Passport Back" />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                          <ImageUpload bucket="clients" useCamera={true} onUploadComplete={(url) => setFormData({...formData, passport_back: url})} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Global AI Scan Button */}
+                <div className="mt-8 mb-4">
+                  <button 
+                    className="btn btn-primary w-full flex items-center justify-center gap-2 py-3"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleGlobalOCR();
+                    }}
+                    disabled={isScanning || (!formData.cin_front && !formData.license_front && !formData.passport_front)}
+                    style={{ fontSize: '1.1rem' }}
+                  >
+                    {isScanning ? <Loader2 className="animate-spin" size={24} /> : <Search size={24} />}
+                    {isAr ? 'استخراج جميع البيانات' : 'Extraire toutes les données'}
+                  </button>
+                  <p className="text-center text-xs text-secondary mt-2">
+                    {isAr ? 'سيتم مسح جميع الوثائق المرفقة دفعة واحدة لملء الاستمارة' : 'Tous les documents téléchargés seront analysés en une seule fois pour remplir le formulaire'}
+                  </p>
                 </div>
               </div>
             </div>
