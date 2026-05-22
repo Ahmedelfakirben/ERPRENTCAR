@@ -26,6 +26,7 @@ const ClientDetail = () => {
     first_name: '', last_name: '', phone: '', email: '', cin: '', 
     passport: '', driver_license: '', license_delivery_date: '', 
     birth_date: '', birth_place: '', nationality: 'Marocaine', address: '',
+    foreign_address: '',
     license_expiry_date: ''
   });
 
@@ -56,9 +57,14 @@ const ClientDetail = () => {
 
   const openEditModal = () => {
     if (client) {
+      // Split full_name safely if first_name/last_name fields are undefined/empty:
+      const nameParts = (client.full_name || '').trim().split(/\s+/);
+      const firstName = client.first_name || nameParts[0] || '';
+      const lastName = client.last_name || nameParts.slice(1).join(' ') || '';
+
       setEditFormData({
-        first_name: client.first_name || '',
-        last_name: client.last_name || '',
+        first_name: firstName,
+        last_name: lastName,
         phone: client.phone || '',
         email: client.email || '',
         cin: client.cin || '',
@@ -69,6 +75,7 @@ const ClientDetail = () => {
         birth_place: client.birth_place || '',
         nationality: client.nationality || 'Marocaine',
         address: client.address || '',
+        foreign_address: client.foreign_address || '',
         license_expiry_date: client.license_expiry_date || ''
       });
       setShowEdit(true);
@@ -213,8 +220,12 @@ const ClientDetail = () => {
                   <span className="info-value">{c.nationality}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">{isAr ? 'العنوان' : 'Adresse'}</span>
+                  <span className="info-label">{isAr ? 'العنوان بالمغرب' : 'Adresse au Maroc'}</span>
                   <span className="info-value">{c.address || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">{isAr ? 'العنوان بالخارج' : "Adresse à l'étranger"}</span>
+                  <span className="info-value">{c.foreign_address || '—'}</span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">{isAr ? 'رقم جواز السفر' : 'Passeport N°'}</span>
@@ -582,14 +593,24 @@ const ClientDetail = () => {
                   onChange={e => setEditFormData({...editFormData, birth_place: e.target.value})}
                 />
               </div>
-              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+              <div className="input-group">
                 <label className="input-label">
-                  {isAr ? 'العنوان' : 'Adresse'}
+                  {isAr ? 'العنوان بالمغرب' : 'Adresse au Maroc'}
                 </label>
                 <input 
                   className="input-field" 
                   value={editFormData.address}
                   onChange={e => setEditFormData({...editFormData, address: e.target.value})}
+                />
+              </div>
+              <div className="input-group">
+                <label className="input-label">
+                  {isAr ? 'العنوان بالخارج' : "Adresse à l'étranger"}
+                </label>
+                <input 
+                  className="input-field" 
+                  value={editFormData.foreign_address}
+                  onChange={e => setEditFormData({...editFormData, foreign_address: e.target.value})}
                 />
               </div>
             </div>

@@ -120,6 +120,10 @@ CREATE TABLE public.clients (
   driver_license TEXT,
   nationality TEXT DEFAULT 'Marocaine',
   address TEXT,
+  foreign_address TEXT,
+  birth_date DATE,
+  birth_place TEXT,
+  license_date DATE,
   is_blacklisted BOOLEAN NOT NULL DEFAULT FALSE,
   blacklist_reason TEXT,
   is_vip BOOLEAN NOT NULL DEFAULT FALSE,
@@ -169,8 +173,14 @@ CREATE TABLE public.contracts (
   km_in INT,
   cleanliness_out TEXT CHECK (cleanliness_out IN ('clean', 'acceptable', 'dirty')),
   cleanliness_in TEXT CHECK (cleanliness_in IN ('clean', 'acceptable', 'dirty')),
-  time_out TIME,
-  actual_return_time TIME,
+  time_out TEXT DEFAULT '10:00',
+  time_in TEXT DEFAULT '20:00',
+  actual_return_time TEXT,
+  second_driver_name TEXT,
+  second_driver_birth TEXT,
+  second_driver_address TEXT,
+  second_driver_license TEXT,
+  second_driver_license_date DATE,
 
   -- Metadata
   contract_language TEXT DEFAULT 'fr' CHECK (contract_language IN ('fr', 'ar', 'en', 'es')),
@@ -424,4 +434,5 @@ ADD COLUMN IF NOT EXISTS actual_return_time TEXT;
 ALTER TABLE public.clients
 ADD COLUMN IF NOT EXISTS birth_date DATE,
 ADD COLUMN IF NOT EXISTS birth_place TEXT,
-ADD COLUMN IF NOT EXISTS license_date DATE;
+ADD COLUMN IF NOT EXISTS license_date DATE,
+ADD COLUMN IF NOT EXISTS foreign_address TEXT;

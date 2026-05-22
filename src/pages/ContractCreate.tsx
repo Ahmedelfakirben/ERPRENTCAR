@@ -55,7 +55,20 @@ const ContractCreate = () => {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
+      const today = new Date().toISOString().split('T')[0];
+
       const filtered = vehicles.filter(v => {
+        // 1. Exclude vehicles that are in workshop (maintenance) or blocked
+        if (v.status === 'maintenance' || v.status === 'blocked') {
+          return false;
+        }
+
+        // 2. If the new contract overlaps with today/past and the vehicle is currently rented, exclude it
+        if (startDate <= today && v.status === 'rented') {
+          return false;
+        }
+
+        // 3. Check for date overlap with active or pending contracts
         const hasOverlap = activeContracts.some(c => {
           if (c.vehicle_id !== v.id) return false;
           const cStart = new Date(c.start_date);

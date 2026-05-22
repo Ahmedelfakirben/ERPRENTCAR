@@ -35,6 +35,7 @@ const Clients = () => {
     birth_place: '',
     nationality: 'Marocaine',
     address: '',
+    foreign_address: '',
     license_expiry_date: '',
     cin_front: '',
     cin_back: '',
@@ -53,11 +54,30 @@ const Clients = () => {
     try {
       const { data, error } = await supabase
         .from('clients')
-        .select('*')
+        .select('*, contracts(total_ttc, start_date)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setClients(data || []);
+
+      const mapped = (data || []).map((c: any) => {
+        const total_rentals = c.contracts ? c.contracts.length : 0;
+        const total_spent = c.contracts ? c.contracts.reduce((sum: number, co: any) => sum + (co.total_ttc || 0), 0) : 0;
+        const last_rental = c.contracts && c.contracts.length > 0 ? c.contracts.reduce((latest: string, co: any) => {
+          if (!co.start_date) return latest;
+          if (!latest || latest === '-') return co.start_date;
+          return new Date(co.start_date) > new Date(latest) ? co.start_date : latest;
+        }, '-') : '-';
+
+        const { contracts, ...rest } = c;
+        return {
+          ...rest,
+          total_rentals,
+          total_spent,
+          last_rental
+        };
+      });
+
+      setClients(mapped);
     } catch (err) {
       console.error('Error fetching clients:', err);
     } finally {
@@ -92,7 +112,10 @@ const Clients = () => {
           if (result.address) newState.address = result.address;
           if (result.driver_license) newState.driver_license = result.driver_license;
           if (result.license_delivery_date) newState.license_delivery_date = result.license_delivery_date;
+          if (result.license_expiry_date) newState.license_expiry_date = result.license_expiry_date;
           if (result.passport) newState.passport = result.passport;
+          if (result.birth_place) newState.birth_place = result.birth_place;
+          if (result.foreign_address) newState.foreign_address = result.foreign_address;
           
           if (result.full_name) {
             const nameParts = result.full_name.trim().split(/\s+/);
@@ -142,6 +165,7 @@ const Clients = () => {
         first_name: '', last_name: '', full_name_ar: '', phone: '', email: '',
         cin: '', passport: '', driver_license: '', license_delivery_date: '',
         birth_date: '', birth_place: '', nationality: 'Marocaine', address: '',
+        foreign_address: '',
         license_expiry_date: '', cin_front: '', cin_back: '', license_front: '', license_back: '',
         passport_front: '', passport_back: ''
       });
@@ -156,6 +180,7 @@ const Clients = () => {
     const name = (isAr ? (c.full_name_ar || c.full_name) : c.full_name) || '';
     return name.toLowerCase().includes(search.toLowerCase()) || 
            (c.cin || '').toLowerCase().includes(search.toLowerCase()) ||
+           (c.passport || '').toLowerCase().includes(search.toLowerCase()) ||
            (c.phone || '').toLowerCase().includes(search.toLowerCase());
   });
 
@@ -170,7 +195,7 @@ const Clients = () => {
             <Search size={16} />
             <input
               type="text"
-              placeholder={isAr ? 'بحث بالاسم أو رقم البطاقة...' : 'Rechercher par nom ou CIN...'}
+              placeholder={isAr ? 'بحث بالاسم أو رقم الوثيقة...' : 'Rechercher par nom, CIN, Passeport...'}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -186,6 +211,7 @@ const Clients = () => {
                   <th>{isAr ? 'العميل' : 'Client'}</th>
                   <th className="hide-mobile">{isAr ? 'الهاتف' : 'Téléphone'}</th>
                   <th>CIN</th>
+                  <th>{isAr ? 'جواز السفر' : 'Passeport'}</th>
                   <th className="hide-mobile">{isAr ? 'الإيجارات' : 'Locations'}</th>
                   <th>{isAr ? 'المجموع' : 'Total Dépensé'}</th>
                   <th className="hide-mobile">{isAr ? 'آخر إيجار' : 'Dernier'}</th>
@@ -194,7 +220,7 @@ const Clients = () => {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={8} className="text-center p-8"><Loader2 className="animate-spin text-primary inline-block" /></td></tr>
+                  <tr><td colSpan={9} className="text-center p-8"><Loader2 className="animate-spin text-primary inline-block" /></td></tr>
                 ) : filtered.map(c => (
                   <tr key={c.id} className="cursor-pointer" onClick={() => navigate(`/crm/${c.id}`)}>
                     <td>
@@ -207,7 +233,8 @@ const Clients = () => {
                       </div>
                     </td>
                     <td className="text-secondary hide-mobile">{c.phone}</td>
-                    <td className="font-medium" style={{ fontFamily: 'monospace' }}>{c.cin}</td>
+                    <td className="font-medium" style={{ fontFamily: 'monospace' }}>{c.cin || '—'}</td>
+                    <td className="font-medium" style={{ fontFamily: 'monospace' }}>{c.passport || '—'}</td>
                     <td className="hide-mobile">{c.total_rentals || 0}</td>
                     <td className="font-semibold">{(c.total_spent || 0).toLocaleString()} MAD</td>
                     <td className="text-secondary hide-mobile">{c.last_rental || '-'}</td>
@@ -391,15 +418,26 @@ const Clients = () => {
                     onChange={e => setFormData({...formData, birth_place: e.target.value})}
                   />
                 </div>
-                <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <div className="input-group">
                   <label className="input-label">
-                    {isAr ? 'العنوان' : 'Adresse'}
+                    {isAr ? 'العنوان بالمغرب' : 'Adresse au Maroc'}
                   </label>
                   <input 
                     className="input-field" 
-                    placeholder="123 Rue Principale"
+                    placeholder="123 Rue Principale, Tétouan"
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">
+                    {isAr ? 'العنوان بالخارج' : "Adresse à l'étranger"}
+                  </label>
+                  <input 
+                    className="input-field" 
+                    placeholder="123 Rue de Paris, France"
+                    value={formData.foreign_address}
+                    onChange={e => setFormData({...formData, foreign_address: e.target.value})}
                   />
                 </div>
               </div>

@@ -167,6 +167,7 @@ const ContractPrint = () => {
             <F fr="Date de Naissance" ar="تاريخ الإزدياد" val={cl?.birth_date} />
             <F fr="Permis de Conduire N°" ar="رخصة السياقة" val={cl?.driver_license} />
             <F fr="Délivré le" ar="صادرة في" val={cl?.license_delivery_date} />
+            <F fr="Expire le" ar="ينتهي في" val={cl?.license_expiry_date} />
             <F fr="C.I.N ou Passeport N°" ar="رقم البطاقة الوطنية أو جواز السفر" val={cl?.cin || cl?.passport} />
             <F fr="Adresse à l'étranger" ar="العنوان بالخارج" val={cl?.foreign_address} />
             <F fr="Tél/" val={cl?.phone} />
@@ -256,10 +257,6 @@ const ContractPrint = () => {
                 <div style={{width:'14mm'}}></div>
                 <div className="chk">{c.payment_method === 'cheque' ? '✓' : ''}</div>
                 <span>Chèque</span>
-              </div>
-              <div className="caution-block">
-                <div style={{fontWeight:'bold', fontSize:'7pt'}}>ضمانة<br/>Caution:</div>
-                <div className="caution-inner"></div>
               </div>
             </div>
           </div>

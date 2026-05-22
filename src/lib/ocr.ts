@@ -7,7 +7,10 @@ export interface OCRResult {
   address?: string;
   driver_license?: string;
   license_delivery_date?: string;
+  license_expiry_date?: string;
   passport?: string;
+  birth_place?: string;
+  foreign_address?: string;
 }
 
 // Initialize the Google Generative AI client with the API key from environment variables
@@ -65,19 +68,22 @@ export const scanDocument = async (imageUrls: string[]): Promise<OCRResult> => {
       3. Return ONLY valid JSON. No markdown, no backticks, no explanation.
 
       WHAT TO LOOK FOR IN EACH DOCUMENT TYPE:
-      - CIN FRONT: full_name (in Latin script, uppercase), cin number (format: 1-2 letters + 5-6 digits e.g. L541131), birth_date
+      - CIN FRONT: full_name (in Latin script, uppercase), cin number (format: 1-2 letters + 5-6 digits e.g. L541131), birth_date, and birth_place (Lieu de naissance / مكان الولادة) if present.
       - CIN BACK: address (residential address in French/Latin script)
-      - DRIVER'S LICENSE FRONT: driver_license number (Permis N° or N° Permis), license_delivery_date (Délivré le / Date de délivrance)
-      - PASSPORT: passport number (starts with letters like AB, P, etc.)
+      - DRIVER'S LICENSE FRONT: driver_license number (Permis N° or N° Permis), license_delivery_date (Délivré le / Date de délivrance), license_expiry_date (Valable jusqu'au / Expire le / Expiration date)
+      - PASSPORT: passport number (starts with letters like AB, P, etc.), birth_place (Lieu de naissance / Place of birth), and any address listed in it (which represents the foreign_address / residential address abroad).
 
       OUTPUT FIELDS (use null if not found):
       - "full_name": Person's full name in UPPERCASE
       - "cin": National ID number, no spaces (e.g. "L541131")
       - "birth_date": Date of birth as YYYY-MM-DD
-      - "address": Full residential address from back of CIN
+      - "address": Full residential address in Morocco, from back of CIN
       - "driver_license": Driver's license number (e.g. "12/345678")
       - "license_delivery_date": License issue date as YYYY-MM-DD
+      - "license_expiry_date": License expiration date as YYYY-MM-DD
       - "passport": Passport number (e.g. "AB1234567")
+      - "birth_place": Place of birth (Lieu de naissance / مكان الولادة) extracted from CIN or Passport
+      - "foreign_address": Full residential address/domicile abroad, extracted from Passport pages (e.g. address on passport or visa)
 
       EXAMPLE OUTPUT:
       {
@@ -87,7 +93,10 @@ export const scanDocument = async (imageUrls: string[]): Promise<OCRResult> => {
         "address": "AV ALLAMA MHAND OURIAGHLI RES YOUSEF B N0 04 TETOUAN",
         "driver_license": "12/345678",
         "license_delivery_date": "2020-01-15",
-        "passport": null
+        "license_expiry_date": "2030-01-15",
+        "passport": "AB1234567",
+        "birth_place": "TETOUAN",
+        "foreign_address": "12 RUE DE LA PAIX, 75002 PARIS, FRANCE"
       }
     `;
 

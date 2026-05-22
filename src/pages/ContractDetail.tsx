@@ -207,7 +207,7 @@ const ContractDetail = () => {
 
   const fetchAvailableVehicles = async () => {
     if (!contract || !incidentData.incident_date) return;
-    const { data: vData } = await supabase.from('vehicles').select('id, brand, model, plate').eq('status', 'available');
+    const { data: vData } = await supabase.from('vehicles').select('id, brand, model, plate, daily_rate').eq('status', 'available');
     
     // Get contracts that overlap with the new replacement contract dates
     const { data: overlapping } = await supabase.from('contracts')
@@ -231,12 +231,17 @@ const ContractDetail = () => {
       const closingTotal = Math.round(actualDays * ppd);
       const vStatus = incidentData.vehicle_status === 'in_workshop' ? 'maintenance' : 'blocked';
 
+      // 1. Terminate current contract
       await supabase.from('contracts').update({
         status: 'completed', actual_return_date: cDate, end_date: cDate,
         total_ttc: closingTotal, total_days: actualDays,
         notes: (contract.notes || '') + ` | PANNE (${incidentData.type}): ${incidentData.description}`
       }).eq('id', id);
+
+      // 2. Put old vehicle in workshop or blocked status
       await supabase.from('vehicles').update({ status: vStatus }).eq('id', contract.vehicle_id);
+
+      // 3. Insert incident report
       await supabase.from('incidents').insert({
         contract_id: id, vehicle_id: contract.vehicle_id,
         incident_date: cDate, incident_time: incidentData.incident_time,
@@ -244,25 +249,87 @@ const ContractDetail = () => {
         vehicle_status: incidentData.vehicle_status, action_taken: incidentData.action
       });
 
+      // 4. If we chose to change the vehicle, create the new contract for the remaining days
       if (incidentData.action === 'change_vehicle' && incidentData.replacement_vehicle_id) {
         const remDays = Math.max(1, Math.ceil((new Date(contract.end_date).getTime() - new Date(cDate).getTime()) / 86400000));
-        const { data: nc } = await supabase.from('contracts').insert({
-          client_id: contract.client_id, vehicle_id: incidentData.replacement_vehicle_id,
-          start_date: cDate, end_date: contract.end_date,
-          total_days: remDays, total_ttc: Math.round(remDays * ppd),
-          status: 'active', time_out: contract.time_out, time_in: contract.time_in,
+        
+        let contractNum = '';
+        try {
+          const { data: rpcNum, error: rpcError } = await supabase.rpc('generate_contract_number');
+          if (!rpcError && rpcNum) contractNum = rpcNum;
+          else throw new Error('RPC failed');
+        } catch (e) {
+          contractNum = `CT-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+        }
+
+        const replacementVehicle = availableVehicles.find(v => v.id === incidentData.replacement_vehicle_id);
+        const dailyRate = replacementVehicle?.daily_rate || contract.daily_rate || 350;
+
+        const { data: nc, error: insertError } = await supabase.from('contracts').insert({
+          contract_number: contractNum,
+          client_id: contract.client_id,
+          vehicle_id: incidentData.replacement_vehicle_id,
+          start_date: cDate,
+          end_date: contract.end_date,
+          total_days: remDays,
+          daily_rate: dailyRate,
+          subtotal: Math.round(remDays * ppd),
+          total_ttc: Math.round(remDays * ppd),
+          deposit_amount: 0, // Deposit already handled in original contract
+          contract_language: contract.contract_language || 'fr',
+          status: 'active',
+          time_out: contract.time_out,
+          time_in: contract.time_in,
           fuel_level_out: 'full',
+          second_driver_name: contract.second_driver_name,
+          second_driver_birth: contract.second_driver_birth,
+          second_driver_address: contract.second_driver_address,
+          second_driver_license: contract.second_driver_license,
+          second_driver_license_date: contract.second_driver_license_date,
           notes: `Remplacement panne - contrat original: ${contract.contract_number}`
         }).select().single();
+
+        if (insertError) {
+          console.error("Insert replacement contract failed, trying basic insert fallback:", insertError);
+          const { data: fallbackNc, error: fallbackError } = await supabase.from('contracts').insert({
+            contract_number: contractNum,
+            client_id: contract.client_id,
+            vehicle_id: incidentData.replacement_vehicle_id,
+            start_date: cDate,
+            end_date: contract.end_date,
+            total_days: remDays,
+            daily_rate: dailyRate,
+            subtotal: Math.round(remDays * ppd),
+            total_ttc: Math.round(remDays * ppd),
+            deposit_amount: 0,
+            contract_language: contract.contract_language || 'fr',
+            status: 'active',
+            notes: `Remplacement panne - contrat original: ${contract.contract_number} | Heure: ${contract.time_out} -> ${contract.time_in}`
+          }).select().single();
+
+          if (fallbackError) throw fallbackError;
+          
+          await supabase.from('vehicles').update({ status: 'rented' }).eq('id', incidentData.replacement_vehicle_id);
+          setShowIncidentModal(false);
+          if (fallbackNc) navigate(`/contracts/${fallbackNc.id}`);
+          return;
+        }
+
+        // Set the replacement vehicle status to rented
         await supabase.from('vehicles').update({ status: 'rented' }).eq('id', incidentData.replacement_vehicle_id);
         setShowIncidentModal(false);
         if (nc) navigate(`/contracts/${nc.id}`);
         return;
       }
+      
       setShowIncidentModal(false);
       fetchContractDetails();
-    } catch (err) { console.error(err); alert(isAr ? 'حدث خطأ' : 'Erreur'); }
-    finally { setLoadingAction(false); }
+    } catch (err) { 
+      console.error(err); 
+      alert(isAr ? 'حدث خطأ' : 'Erreur lors du traitement de l\'incident. Voir la console.'); 
+    } finally { 
+      setLoadingAction(false); 
+    }
   };
 
   const handleCancelContract = async () => {

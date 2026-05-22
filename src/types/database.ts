@@ -75,6 +75,10 @@ export interface Client {
   driver_license?: string;
   nationality: string;
   address?: string;
+  foreign_address?: string;
+  birth_date?: string;
+  birth_place?: string;
+  license_date?: string;
   is_blacklisted: boolean;
   blacklist_reason?: string;
   is_vip: boolean;
