@@ -36,15 +36,12 @@ const ContractPrint = () => {
 
   if (loading) return <div className="p-24 text-center"><Loader2 className="animate-spin inline-block" /></div>;
   if (!contract) return <div className="p-24 text-center">Contrat introuvable</div>;
-
   const c = contract;
   const v = contract.vehicles;
   const cl = contract.clients;
-
   const nDays = c.start_date && c.end_date
     ? Math.max(1, Math.ceil((new Date(c.end_date).getTime() - new Date(c.start_date).getTime()) / 86400000))
     : 0;
-  const priceDay = nDays > 0 && c.total_ttc ? (c.total_ttc / nDays).toFixed(0) : '';
 
   // Field helper
   const F = ({ fr, ar, val }: { fr: string; ar?: string; val?: any }) => (
@@ -212,8 +209,8 @@ const ContractPrint = () => {
                 <tr>
                   <td className="lbl">الأيام<span className="ar">Jours</span></td>
                   <td style={{fontWeight:'bold'}}>{nDays || ''}</td>
-                  <td style={{fontWeight:'bold'}}>{priceDay ? `${priceDay} DH` : ''}</td>
-                  <td style={{textAlign:'right', fontWeight:'bold'}}>{c.total_ttc ? `${c.total_ttc} DH` : '.........DH'}</td>
+                  <td style={{fontWeight:'bold'}}></td>
+                  <td style={{textAlign:'right', fontWeight:'bold'}}>.........DH</td>
                 </tr>
                 <tr>
                   <td className="lbl">الأسابيع<span className="ar">Semaines</span></td>
@@ -232,7 +229,7 @@ const ContractPrint = () => {
                 </tr>
                 <tr className="row-tot">
                   <td className="lbl" colSpan={3} style={{textAlign:'right'}}>المجموع<br/>Total</td>
-                  <td style={{textAlign:'right'}}>{c.total_ttc ? `${c.total_ttc} DH` : '.........DH'}</td>
+                  <td style={{textAlign:'right'}}>.........DH</td>
                 </tr>
                 <tr className="row-sup">
                   <td className="lbl" colSpan={3} style={{textAlign:'right'}}>زيادة Suplément</td>
@@ -249,13 +246,13 @@ const ContractPrint = () => {
               <div style={{display:'flex', alignItems:'center', gap:'2mm', marginBottom:'0.8mm'}}>
                 <span style={{fontWeight:'bold', fontSize:'7pt'}}>Paiement:</span>
                 <div className="pay-row">
-                  <div className="chk">{c.payment_method === 'cash' ? '✓' : ''}</div>
+                  <div className="chk"></div>
                   <span className="espece">Espèce</span>
                 </div>
               </div>
               <div className="pay-row">
                 <div style={{width:'14mm'}}></div>
-                <div className="chk">{c.payment_method === 'cheque' ? '✓' : ''}</div>
+                <div className="chk"></div>
                 <span>Chèque</span>
               </div>
             </div>

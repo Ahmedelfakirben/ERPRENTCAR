@@ -343,10 +343,7 @@ const VehicleDetail = () => {
                 </div>
               )}
 
-              <div className="hero-stat hero-rate">
-                <span className="text-primary font-bold" style={{ fontSize: '1rem' }}>{v.daily_rate} MAD</span>
-                <small>/{isAr ? 'يوم' : 'jour'}</small>
-              </div>
+
             </div>
           </div>
 
@@ -1090,10 +1087,7 @@ const VehicleDetail = () => {
                   <option value="Automatique">{isAr ? 'أوتوماتيكي' : 'Automatique'}</option>
                 </select>
               </div>
-              <div className="input-group">
-                <label className="input-label">{isAr ? 'الثمن اليومي (MAD)' : 'Tarif Journalier (MAD)'}</label>
-                <input className="input-field" type="number" value={editData.daily_rate || ''} onChange={e => setEditData({ ...editData, daily_rate: e.target.value ? parseFloat(e.target.value) : 0 })} />
-              </div>
+
               <div className="input-group">
                 <label className="input-label">{isAr ? 'الكيلومترات' : 'Kilométrage'}</label>
                 <input className="input-field" type="number" value={editData.current_km || ''} onChange={e => setEditData({ ...editData, current_km: e.target.value ? parseInt(e.target.value) : 0 })} />

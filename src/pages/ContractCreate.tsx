@@ -46,6 +46,7 @@ const ContractCreate = () => {
 
   // Step 3: Vehicle
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [customDailyRate, setCustomDailyRate] = useState<number | ''>('');
 
   useEffect(() => {
     fetchInitialData();
@@ -115,7 +116,7 @@ const ContractCreate = () => {
 
   const days = calcDays();
   const vehicle = vehicles.find(v => v.id === selectedVehicle);
-  const subtotal = vehicle ? vehicle.daily_rate * days : 0;
+  const subtotal = (Number(customDailyRate) || 0) * days;
   // NO TVA for contracts per user request
   const tvaAmount = 0; 
   const totalTtc = subtotal - discount;
@@ -145,7 +146,7 @@ const ContractCreate = () => {
         second_driver_address: secondDriverAddress,
         second_driver_license: secondDriverLicense,
         second_driver_license_date: secondDriverLicenseDate,
-        daily_rate: vehicle?.daily_rate,
+        daily_rate: Number(customDailyRate) || 0,
         total_days: days,
         subtotal: subtotal,
         discount_amount: discount,
@@ -166,7 +167,7 @@ const ContractCreate = () => {
                 vehicle_id: selectedVehicle,
                 start_date: startDate,
                 end_date: endDate,
-                daily_rate: vehicle?.daily_rate,
+                daily_rate: Number(customDailyRate) || 0,
                 total_days: days,
                 subtotal: subtotal,
                 discount_amount: discount,
@@ -308,61 +309,61 @@ const ContractCreate = () => {
         <div className="wizard-content">
           <div className="card p-8" style={{ maxWidth: 850 }}>
             
-            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">Période de Location</h4>
+            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">{isAr ? 'فترة الإيجار' : 'Période de Location'}</h4>
             <div className="form-grid mb-10" style={{ gap: '1.5rem' }}>
               <div className="input-group">
-                <label className="input-label">Date de Début</label>
+                <label className="input-label">{isAr ? 'تاريخ البدء' : 'Date de Début'}</label>
                 <input className="input-field" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Heure de Début</label>
+                <label className="input-label">{isAr ? 'وقت البدء' : 'Heure de Début'}</label>
                 <input className="input-field" type="time" value={timeOut} onChange={e => setTimeOut(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Date de Fin</label>
+                <label className="input-label">{isAr ? 'تاريخ الانتهاء' : 'Date de Fin'}</label>
                 <input className="input-field" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Heure de Fin</label>
+                <label className="input-label">{isAr ? 'وقت الانتهاء' : 'Heure de Fin'}</label>
                 <input className="input-field" type="time" value={timeIn} onChange={e => setTimeIn(e.target.value)} />
               </div>
             </div>
 
-            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">Informations Financières</h4>
+            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">{isAr ? 'المعلومات المالية' : 'Informations Financières'}</h4>
             <div className="form-grid mb-10" style={{ gap: '1.5rem' }}>
               <div className="input-group">
-                <label className="input-label">Caution (MAD)</label>
+                <label className="input-label">{isAr ? 'الضمان (MAD)' : 'Caution (MAD)'}</label>
                 <input className="input-field" type="number" value={deposit} onChange={e => setDeposit(Number(e.target.value))} />
               </div>
               <div className="input-group">
-                <label className="input-label">Langue du Contrat</label>
+                <label className="input-label">{isAr ? 'لغة العقد' : 'Langue du Contrat'}</label>
                 <select className="input-field" value={contractLang} onChange={e => setContractLang(e.target.value as 'fr' | 'ar')}>
-                  <option value="fr">Français</option>
-                  <option value="ar">العربية</option>
+                  <option value="fr">{isAr ? 'الفرنسية' : 'Français'}</option>
+                  <option value="ar">{isAr ? 'العربية' : 'العربية'}</option>
                 </select>
               </div>
             </div>
 
-            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">Autre Conducteur (Optionnel)</h4>
+            <h4 className="mb-6 font-bold border-b pb-3 text-lg text-primary">{isAr ? 'سائق آخر (اختياري)' : 'Autre Conducteur (Optionnel)'}</h4>
             <div className="form-grid" style={{ gap: '1.5rem' }}>
               <div className="input-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="input-label">Nom et Prénom</label>
+                <label className="input-label">{isAr ? 'الاسم والنسب' : 'Nom et Prénom'}</label>
                 <input className="input-field" placeholder="Ex: Ahmed Yassin" value={secondDriverName} onChange={e => setSecondDriverName(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Date de Naissance</label>
+                <label className="input-label">{isAr ? 'تاريخ الازدياد' : 'Date de Naissance'}</label>
                 <input className="input-field" type="date" value={secondDriverBirth} onChange={e => setSecondDriverBirth(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Adresse</label>
+                <label className="input-label">{isAr ? 'العنوان' : 'Adresse'}</label>
                 <input className="input-field" placeholder="Ex: Hay Al Matar, Tanger" value={secondDriverAddress} onChange={e => setSecondDriverAddress(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">N° Permis de Conduire</label>
+                <label className="input-label">{isAr ? 'رقم رخصة السياقة' : 'N° Permis de Conduire'}</label>
                 <input className="input-field" placeholder="Ex: 123456/78" value={secondDriverLicense} onChange={e => setSecondDriverLicense(e.target.value)} />
               </div>
               <div className="input-group">
-                <label className="input-label">Date de Délivrance (Permis)</label>
+                <label className="input-label">{isAr ? 'تاريخ الإصدار' : 'Date de Délivrance (Permis)'}</label>
                 <input className="input-field" type="date" value={secondDriverLicenseDate} onChange={e => setSecondDriverLicenseDate(e.target.value)} />
               </div>
             </div>
@@ -377,8 +378,8 @@ const ContractCreate = () => {
           {availableVehicles.length === 0 ? (
             <div className="card p-8 text-center text-secondary">
               <CarFront size={48} className="mx-auto mb-4 opacity-50" />
-              <h3>Aucun véhicule disponible</h3>
-              <p>Il n'y a pas de véhicules disponibles pour la période du {startDate} au {endDate}.</p>
+              <h3>{isAr ? 'لا توجد سيارات متاحة' : 'Aucun véhicule disponible'}</h3>
+              <p>{isAr ? `لا توجد سيارات متاحة للفترة من ${startDate} إلى ${endDate}.` : `Il n'y a pas de véhicules disponibles pour la période du ${startDate} au ${endDate}.`}</p>
             </div>
           ) : (
             <div className="select-grid">
@@ -397,7 +398,6 @@ const ContractCreate = () => {
                     <h4 className="font-bold">{v.brand} {v.model}</h4>
                     <p className="text-sm text-secondary" style={{ fontFamily: 'monospace' }}>{v.plate}</p>
                     <p className="text-sm text-secondary">{v.fuel}</p>
-                    <p className="text-primary font-bold mt-2" style={{ fontSize: '1.1rem' }}>{v.daily_rate} MAD/{isAr ? 'يوم' : 'jour'}</p>
                   </div>
                   {selectedVehicle === v.id && (
                     <div className="select-check"><Check size={16} /></div>
@@ -446,10 +446,6 @@ const ContractCreate = () => {
                     <span className="info-label">{isAr ? 'اللوحة' : 'Matricule'}</span>
                     <span className="info-value" style={{ fontFamily: 'monospace' }}>{vehicle?.plate || '—'}</span>
                   </div>
-                  <div className="info-row">
-                    <span className="info-label">{isAr ? 'السعر/يوم' : 'Tarif/Jour'}</span>
-                    <span className="info-value">{vehicle?.daily_rate || 0} MAD</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -464,6 +460,17 @@ const ContractCreate = () => {
                 <div className="info-row">
                   <span className="info-label">{isAr ? 'أيام' : 'Jours'}</span>
                   <span className="info-value font-medium">{days}</span>
+                </div>
+                <div className="info-row" style={{ alignItems: 'center' }}>
+                  <span className="info-label font-bold text-primary">{isAr ? 'السعر/يوم (MAD)' : 'Tarif/Jour (MAD)'}</span>
+                  <input 
+                    className="input-field" 
+                    type="number" 
+                    style={{ width: '120px', padding: '4px 8px', textAlign: 'right', fontWeight: 'bold' }}
+                    value={customDailyRate} 
+                    onChange={e => setCustomDailyRate(e.target.value ? Number(e.target.value) : '')} 
+                    placeholder="Ex: 350"
+                  />
                 </div>
                 <div className="info-row">
                   <span className="info-label">{isAr ? 'المجموع الفرعي' : 'Sous-total'}</span>
@@ -512,7 +519,7 @@ const ContractCreate = () => {
             {isAr ? 'التالي' : 'Suivant'} <ArrowRight size={16} />
           </button>
         ) : (
-          <button className="btn btn-primary" onClick={handleCreateContract} disabled={loading}>
+          <button className="btn btn-primary" onClick={handleCreateContract} disabled={loading || !customDailyRate}>
             {loading ? <Loader2 className="animate-spin" size={16} /> : <FileCheck size={16} />} 
             {isAr ? 'إنشاء العقد' : 'Créer le Contrat'}
           </button>

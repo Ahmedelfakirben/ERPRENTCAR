@@ -303,16 +303,7 @@ const Fleet = () => {
                     <option value="Automatique">{isAr ? 'أوتوماتيكي' : 'Automatique'}</option>
                   </select>
                 </div>
-                <div className="input-group">
-                  <label className="input-label">{isAr ? 'السعر/يوم' : 'Tarif/Jour'} (MAD)</label>
-                  <input 
-                    className="input-field" 
-                    type="number" 
-                    placeholder="350" 
-                    value={formData.daily_rate}
-                    onChange={e => setFormData({...formData, daily_rate: parseFloat(e.target.value)})}
-                  />
-                </div>
+
                 <div className="input-group" style={{ gridColumn: 'span 2' }}>
                   <ImageUpload 
                     bucket="vehicles" 

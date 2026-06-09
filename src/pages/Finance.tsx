@@ -206,10 +206,10 @@ const Finance = () => {
       </div>
 
       <div className="tab-bar mb-6">
-        <button className={`tab ${tab === 'contracts' ? 'tab-active' : ''}`} onClick={() => setTab('contracts')}>Contrats</button>
-        <button className={`tab ${tab === 'invoices' ? 'tab-active' : ''}`} onClick={() => setTab('invoices')}>Factures</button>
-        <button className={`tab ${tab === 'expenses' ? 'tab-active' : ''}`} onClick={() => setTab('expenses')}>Dépenses</button>
-        <button className={`tab ${tab === 'cash' ? 'tab-active' : ''}`} onClick={() => setTab('cash')}>Caisse</button>
+        <button className={`tab ${tab === 'contracts' ? 'tab-active' : ''}`} onClick={() => setTab('contracts')}>{isAr ? 'العقود' : 'Contrats'}</button>
+        <button className={`tab ${tab === 'invoices' ? 'tab-active' : ''}`} onClick={() => setTab('invoices')}>{isAr ? 'الفواتير' : 'Factures'}</button>
+        <button className={`tab ${tab === 'expenses' ? 'tab-active' : ''}`} onClick={() => setTab('expenses')}>{isAr ? 'المصاريف' : 'Dépenses'}</button>
+        <button className={`tab ${tab === 'cash' ? 'tab-active' : ''}`} onClick={() => setTab('cash')}>{isAr ? 'الصندوق' : 'Caisse'}</button>
       </div>
 
       {/* Tab Content — Contracts */}
@@ -240,9 +240,9 @@ const Finance = () => {
                   <th className="cursor-pointer" onClick={() => mkSort(cSort,'contract_number',setCSort,()=>setCPage(1))}><div className="flex items-center gap-1">{isAr?'رقم العقد':'N° Contrat'} <ArrowUpDown size={13} className="opacity-40"/></div></th>
                   <th className="cursor-pointer" onClick={() => mkSort(cSort,'start_date',setCSort,()=>setCPage(1))}><div className="flex items-center gap-1">{isAr?'التاريخ':'Date'} <ArrowUpDown size={13} className="opacity-40"/></div></th>
                   <th>{isAr?'العميل':'Client'}</th>
-                  <th className="cursor-pointer" onClick={() => mkSort(cSort,'total_ttc',setCSort,()=>setCPage(1))}><div className="flex items-center gap-1">Total <ArrowUpDown size={13} className="opacity-40"/></div></th>
+                  <th className="cursor-pointer" onClick={() => mkSort(cSort,'total_ttc',setCSort,()=>setCPage(1))}><div className="flex items-center gap-1">{isAr ? 'المجموع' : 'Total'} <ArrowUpDown size={13} className="opacity-40"/></div></th>
                   <th>{isAr?'الحالة':'Statut'}</th>
-                  <th>Actions</th>
+                  <th>{isAr ? 'إجراءات' : 'Actions'}</th>
                 </tr></thead>
                 <tbody>
                   {filteredC.length === 0 && <tr><td colSpan={6} className="text-center p-8 text-secondary">{isAr?'لا توجد نتائج':'Aucun resultado'}</td></tr>}
@@ -258,7 +258,7 @@ const Finance = () => {
                         <td onClick={() => navigate(`/contracts/${c.id}`)}><span className={`badge ${statusBadge[c.status]||'badge-secondary'}`}>{statusLabel[c.status]||c.status}</span></td>
                         <td><div className="flex gap-2">
                           <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/contracts/${c.id}/print`)}><Download size={16}/></button>
-                          {!hasInvoice && <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); handleGenerateInvoice(c); }}><Receipt size={14}/> Facturer</button>}
+                          {!hasInvoice && <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); handleGenerateInvoice(c); }}><Receipt size={14}/> {isAr ? 'إصدار فاتورة' : 'Facturer'}</button>}
                         </div></td>
                       </tr>
                     );
@@ -305,13 +305,13 @@ const Finance = () => {
               {loading ? <div className="p-8 text-center"><Loader2 className="animate-spin text-primary" style={{ display: 'inline-block' }} /></div> : (
               <table className="data-table">
                 <thead><tr>
-                  <th className="cursor-pointer" onClick={() => mkSort(iSort,'invoice_number',setISort,()=>setIPage(1))}><div className="flex items-center gap-1">N° Facture <ArrowUpDown size={13} className="opacity-40"/></div></th>
+                  <th className="cursor-pointer" onClick={() => mkSort(iSort,'invoice_number',setISort,()=>setIPage(1))}><div className="flex items-center gap-1">{isAr ? 'رقم الفاتورة' : 'N° Facture'} <ArrowUpDown size={13} className="opacity-40"/></div></th>
                   <th>{isAr?'العميل':'Client'}</th>
-                  <th>N° Contrat</th>
+                  <th>{isAr ? 'رقم العقد' : 'N° Contrat'}</th>
                   <th className="cursor-pointer" onClick={() => mkSort(iSort,'amount_ht',setISort,()=>setIPage(1))}><div className="flex items-center gap-1">HT <ArrowUpDown size={13} className="opacity-40"/></div></th>
                   <th>TVA (20%)</th>
                   <th className="cursor-pointer" onClick={() => mkSort(iSort,'amount_ttc',setISort,()=>setIPage(1))}><div className="flex items-center gap-1">TTC <ArrowUpDown size={13} className="opacity-40"/></div></th>
-                  <th>Actions</th>
+                  <th>{isAr ? 'إجراءات' : 'Actions'}</th>
                 </tr></thead>
                 <tbody>
                   {filteredI.length === 0 && <tr><td colSpan={7} className="text-center p-8 text-secondary">{isAr?'لا توجد نتائج':'Aucun résultat'}</td></tr>}

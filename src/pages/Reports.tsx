@@ -195,10 +195,10 @@ const Reports = () => {
               <table className="report-table-v2">
                 <thead>
                   <tr>
-                    <th>VÉHICULE</th>
-                    <th style={{ textAlign: 'right' }}>REVENUS</th>
-                    <th style={{ textAlign: 'right' }}>DÉPENSES</th>
-                    <th style={{ textAlign: 'right' }}>PROFIT NET</th>
+                    <th>{isAr ? 'السيارة' : 'VÉHICULE'}</th>
+                    <th style={{ textAlign: 'right' }}>{isAr ? 'الإيرادات' : 'REVENUS'}</th>
+                    <th style={{ textAlign: 'right' }}>{isAr ? 'المصاريف' : 'DÉPENSES'}</th>
+                    <th style={{ textAlign: 'right' }}>{isAr ? 'صافي الربح' : 'PROFIT NET'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,8 +224,8 @@ const Reports = () => {
                       <table className="report-table-v2">
                         <thead>
                           <tr>
-                            <th>DATE</th>
-                            <th style={{ textAlign: 'right' }}>MONTANT</th>
+                            <th>{isAr ? 'التاريخ' : 'DATE'}</th>
+                            <th style={{ textAlign: 'right' }}>{isAr ? 'المبلغ' : 'MONTANT'}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -243,8 +243,8 @@ const Reports = () => {
                       <table className="report-table-v2">
                         <thead>
                           <tr>
-                            <th>CATÉGORIE / DESC.</th>
-                            <th style={{ textAlign: 'right' }}>MONTANT</th>
+                            <th>{isAr ? 'الفئة / الوصف' : 'CATÉGORIE / DESC.'}</th>
+                            <th style={{ textAlign: 'right' }}>{isAr ? 'المبلغ' : 'MONTANT'}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -256,7 +256,7 @@ const Reports = () => {
                           ))}
                           {s && s.financingExpenses > 0 && (
                             <tr style={{ background: '#fcf8e3' }}>
-                              <td>Frais de Financement (Crédit)</td>
+                              <td>{isAr ? 'مصاريف التمويل (قرض السيارة)' : 'Frais de Financement (Crédit)'}</td>
                               <td style={{ textAlign: 'right' }}>{s.financingExpenses.toLocaleString()}</td>
                             </tr>
                           )}
