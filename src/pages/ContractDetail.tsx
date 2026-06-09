@@ -5,7 +5,7 @@ import {
   ArrowLeft, FileText, Download, Printer, User, CarFront,
   Fuel, Sparkles, Gauge, CreditCard, CheckCircle2, Camera, Check, FileCheck,
   Loader2, AlertTriangle, ArrowRight, Calendar, X as XIcon, ShieldAlert,
-  CalendarPlus, Wrench
+  CalendarPlus, Wrench, Trash2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ContractDetail.css';
@@ -360,6 +360,32 @@ const ContractDetail = () => {
     }
   };
 
+  const handleDeleteContract = async () => {
+    const msg = isAr 
+      ? 'هل أنت متأكد أنك تريد حذف هذا العقد نهائياً؟ سيتم حذف جميع الفواتير والحركات المتعلقة به. لا يمكن التراجع عن هذا الإجراء.' 
+      : 'Êtes-vous sûr de vouloir supprimer ce contrat DÉFINITIVEMENT ? Toutes les factures et transactions liées seront supprimées. Cette action est irréversible.';
+    if (!window.confirm(msg)) return;
+
+    setLoadingAction(true);
+    try {
+      // Free up the vehicle
+      if (contract.status === 'active' || contract.status === 'pending') {
+         await supabase.from('vehicles').update({ status: 'available' }).eq('id', contract.vehicle_id);
+      }
+      
+      // Delete the contract (assuming cascading deletes on invoices/transactions, or delete them first if not)
+      const { error } = await supabase.from('contracts').delete().eq('id', id);
+      if (error) throw error;
+      
+      navigate('/contracts');
+    } catch (err) {
+      console.error('Error deleting contract:', err);
+      alert(isAr ? 'خطأ في حذف العقد' : 'Erreur lors de la suppression du contrat');
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
   const statusLabel: Record<string, string> = {
     pending: isAr ? 'معلق' : 'En attente',
     active: isAr ? 'نشط' : 'Actif',
@@ -404,6 +430,15 @@ const ContractDetail = () => {
           </button>
           <button className="btn btn-primary" onClick={() => navigate(`/contracts/${id}/print?action=download`)}>
             <Download size={16} /> PDF
+          </button>
+          
+          <button 
+            className="btn btn-outline text-error border-error/50 hover:bg-error/10 hover:border-error" 
+            onClick={handleDeleteContract}
+            disabled={loadingAction}
+          >
+            {loadingAction ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
+            {isAr ? 'حذف' : 'Supprimer'}
           </button>
           
           {/* Cancel Button - Only for active/pending and not finished */}

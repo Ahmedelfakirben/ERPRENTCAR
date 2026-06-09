@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, User, Phone, Mail, CreditCard,
   FileText, History, Edit, Shield,
-  CalendarDays, CarFront, Loader2, X, Check
+  CalendarDays, CarFront, Loader2, X, Check, Trash2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ImageUpload from '../components/common/ImageUpload';
@@ -106,6 +106,24 @@ const ClientDetail = () => {
     }
   };
 
+  const handleDeleteClient = async () => {
+    const msg = isAr 
+      ? 'هل أنت متأكد أنك تريد حذف هذا العميل؟ لا يمكن التراجع عن هذا الإجراء.' 
+      : 'Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.';
+    if (!window.confirm(msg)) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('clients').delete().eq('id', id);
+      if (error) throw error;
+      navigate('/crm');
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      alert(isAr ? 'خطأ في حذف العميل. ربما لديه عقود مسجلة.' : 'Erreur lors de la suppression. Ce client a peut-être des contrats liés.');
+      setLoading(false);
+    }
+  };
+
   const handleUpdateDocument = async (url: string, field: string) => {
     try {
       const { error } = await supabase
@@ -151,6 +169,9 @@ const ClientDetail = () => {
             <ArrowLeft size={18} /> {isAr ? 'العودة للعملاء' : 'Retour aux Clients'}
           </button>
           <div className="flex gap-2">
+            <button className="btn btn-outline text-error border-error/50 hover:bg-error/10 hover:border-error" onClick={handleDeleteClient}>
+              <Trash2 size={16} /> {isAr ? 'حذف' : 'Supprimer'}
+            </button>
             <button className="btn btn-outline" onClick={openEditModal}><Edit size={16} /> {isAr ? 'تعديل' : 'Modifier'}</button>
           </div>
         </div>
