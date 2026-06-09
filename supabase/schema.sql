@@ -355,21 +355,15 @@ CREATE POLICY "Authenticated can manage clients" ON public.clients FOR ALL TO au
 CREATE POLICY "Authenticated can read contracts" ON public.contracts FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated can insert contracts" ON public.contracts FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated can update contracts" ON public.contracts FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Admins can manage contracts" ON public.contracts FOR ALL TO authenticated USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Authenticated can manage contracts" ON public.contracts FOR ALL TO authenticated USING (true);
 
 CREATE POLICY "Authenticated can read transactions" ON public.transactions FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated can insert transactions" ON public.transactions FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admins can manage transactions" ON public.transactions FOR ALL TO authenticated USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Authenticated can manage transactions" ON public.transactions FOR ALL TO authenticated USING (true);
 
 CREATE POLICY "Authenticated can read invoices" ON public.invoices FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated can insert invoices" ON public.invoices FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admins can manage invoices" ON public.invoices FOR ALL TO authenticated USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Authenticated can manage invoices" ON public.invoices FOR ALL TO authenticated USING (true);
 
 CREATE POLICY "Authenticated can read fines" ON public.fines FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Admins can manage fines" ON public.fines FOR ALL TO authenticated USING (
