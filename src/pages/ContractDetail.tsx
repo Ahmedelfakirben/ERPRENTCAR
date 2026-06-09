@@ -368,19 +368,26 @@ const ContractDetail = () => {
 
     setLoadingAction(true);
     try {
-      // Free up the vehicle
+      // 1. Free up the vehicle if it was tied up
       if (contract.status === 'active' || contract.status === 'pending') {
          await supabase.from('vehicles').update({ status: 'available' }).eq('id', contract.vehicle_id);
       }
       
-      // Delete the contract (assuming cascading deletes on invoices/transactions, or delete them first if not)
+      // 2. Delete related records first to avoid foreign key constraints
+      await Promise.all([
+        supabase.from('transactions').delete().eq('contract_id', id),
+        supabase.from('invoices').delete().eq('contract_id', id),
+        supabase.from('incidents').delete().eq('contract_id', id)
+      ]);
+      
+      // 3. Delete the contract
       const { error } = await supabase.from('contracts').delete().eq('id', id);
       if (error) throw error;
       
       navigate('/contracts');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting contract:', err);
-      alert(isAr ? 'خطأ في حذف العقد' : 'Erreur lors de la suppression du contrat');
+      alert(isAr ? 'خطأ في حذف العقد: ' + err.message : 'Erreur lors de la suppression du contrat: ' + err.message);
     } finally {
       setLoadingAction(false);
     }

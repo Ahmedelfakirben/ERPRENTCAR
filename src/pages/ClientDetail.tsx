@@ -114,12 +114,35 @@ const ClientDetail = () => {
 
     setLoading(true);
     try {
+      // 1. Get all contracts for this client
+      const { data: contracts } = await supabase.from('contracts').select('id, vehicle_id, status').eq('client_id', id);
+      const contractIds = contracts?.map(c => c.id) || [];
+      
+      // Free vehicles if active
+      const activeContracts = contracts?.filter(c => c.status === 'active' || c.status === 'pending') || [];
+      for (const ac of activeContracts) {
+         await supabase.from('vehicles').update({ status: 'available' }).eq('id', ac.vehicle_id);
+      }
+      
+      if (contractIds.length > 0) {
+        await Promise.all([
+          supabase.from('transactions').delete().in('contract_id', contractIds),
+          supabase.from('incidents').delete().in('contract_id', contractIds),
+          supabase.from('contracts').delete().in('id', contractIds)
+        ]);
+      }
+      
+      // 2. Delete invoices (they might be linked to client directly)
+      await supabase.from('invoices').delete().eq('client_id', id);
+
+      // 3. Delete the client
       const { error } = await supabase.from('clients').delete().eq('id', id);
       if (error) throw error;
+      
       navigate('/crm');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting client:', err);
-      alert(isAr ? 'خطأ في حذف العميل. ربما لديه عقود مسجلة.' : 'Erreur lors de la suppression. Ce client a peut-être des contrats liés.');
+      alert(isAr ? 'خطأ في حذف العميل: ' + err.message : 'Erreur lors de la suppression: ' + err.message);
       setLoading(false);
     }
   };
