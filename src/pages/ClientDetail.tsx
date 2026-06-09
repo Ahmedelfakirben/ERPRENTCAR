@@ -125,19 +125,32 @@ const ClientDetail = () => {
       }
       
       if (contractIds.length > 0) {
-        await Promise.all([
+        const results = await Promise.all([
           supabase.from('transactions').delete().in('contract_id', contractIds),
           supabase.from('incidents').delete().in('contract_id', contractIds),
           supabase.from('contracts').delete().in('id', contractIds)
         ]);
+        for (const res of results) {
+          if (res.error && res.error.code !== '42P01') {
+            console.error("Contract related delete error:", res.error);
+            if (res.error.code === '42501') throw new Error("No tienes permisos de administrador.");
+          }
+        }
       }
       
       // 2. Delete invoices (they might be linked to client directly)
-      await supabase.from('invoices').delete().eq('client_id', id);
+      const invRes = await supabase.from('invoices').delete().eq('client_id', id);
+      if (invRes.error) console.error("Invoice delete error:", invRes.error);
 
       // 3. Delete the client
-      const { error } = await supabase.from('clients').delete().eq('id', id);
-      if (error) throw error;
+      const { data, error } = await supabase.from('clients').delete().eq('id', id).select();
+      if (error) {
+        if (error.code === '42501') throw new Error("No tienes permisos de administrador.");
+        throw error;
+      }
+      if (!data || data.length === 0) {
+        throw new Error("No se pudo eliminar el cliente. Asegúrate de tener rol de administrador.");
+      }
       
       navigate('/crm');
     } catch (err: any) {

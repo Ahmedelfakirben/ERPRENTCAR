@@ -374,15 +374,29 @@ const ContractDetail = () => {
       }
       
       // 2. Delete related records first to avoid foreign key constraints
-      await Promise.all([
+      const results = await Promise.all([
         supabase.from('transactions').delete().eq('contract_id', id),
         supabase.from('invoices').delete().eq('contract_id', id),
         supabase.from('incidents').delete().eq('contract_id', id)
       ]);
       
+      // Check for errors in related deletions
+      for (const res of results) {
+        if (res.error && res.error.code !== '42P01') { // Ignore "table does not exist" for incidents
+          console.error("Related delete error:", res.error);
+          if (res.error.code === '42501') throw new Error("No tienes permisos de administrador.");
+        }
+      }
+      
       // 3. Delete the contract
-      const { error } = await supabase.from('contracts').delete().eq('id', id);
-      if (error) throw error;
+      const { data, error } = await supabase.from('contracts').delete().eq('id', id).select();
+      if (error) {
+        if (error.code === '42501') throw new Error("No tienes permisos de administrador para eliminar contratos.");
+        throw error;
+      }
+      if (!data || data.length === 0) {
+        throw new Error("No se pudo eliminar el contrato. Asegúrate de tener rol de administrador.");
+      }
       
       navigate('/contracts');
     } catch (err: any) {
