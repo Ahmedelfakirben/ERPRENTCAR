@@ -19,6 +19,7 @@ const Clients = () => {
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -146,6 +147,8 @@ const Clients = () => {
   };
 
   const handleAddClient = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const payload = {
         ...formData,
@@ -173,6 +176,8 @@ const Clients = () => {
     } catch (err) {
       console.error('Error adding client:', err);
       alert('Error adding client');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -572,8 +577,9 @@ const Clients = () => {
               <button className="btn btn-outline" onClick={() => setShowAdd(false)}>
                 {isAr ? 'إلغاء' : 'Annuler'}
               </button>
-              <button className="btn btn-primary px-8" onClick={handleAddClient}>
-                {isAr ? 'حفظ العميل' : 'Enregistrer Client'}
+              <button className="btn btn-primary px-8 flex items-center gap-2" onClick={handleAddClient} disabled={isSubmitting}>
+                {isSubmitting && <Loader2 size={18} className="animate-spin" />}
+                {isSubmitting ? (isAr ? 'جاري الحفظ...' : 'Enregistrement...') : (isAr ? 'حفظ العميل' : 'Enregistrer Client')}
               </button>
             </div>
           </div>
